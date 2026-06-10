@@ -6,18 +6,15 @@ HORCRUX is an ongoing project representing an evolving lightweight Post-Quantum 
 
 ## 🐍 Project Naming and Branch Evolution
 
-We chose the name **HORCRUX** to reflect the modular and multi-part nature of our architecture. Coherently with this theme, the evolution and distinct developmental stages of the project are represented by separate branches, each named after one of Lord Voldemort's Horcruxes from the Harry Potter universe. 
+We chose the name **HORCRUX** to reflect the modular and multi-part nature of our architecture. Continuing with this theme, the distinct developmental stages of the project are represented by separate branches, taking inspiration from the well-known magical artifacts. 
 
-Below is the complete lore of the Horcruxes, along with the links to the active branches representing our first three versions:
+Below are the links to the active branches representing our current versions:
 
+* **[Cup](https://github.com/vlsi-lab/HORCRUX/tree/cup)**
+* **[Diadem](https://github.com/vlsi-lab/HORCRUX/tree/diadem)**
+* **[Locket](tree/locket)**
 
-* **[Helga Hufflepuff’s Cup](https://github.com/vlsi-lab/HORCRUX/tree/cup):** Stolen from Hepzibah Smith; destroyed by Hermione Granger with a Basilisk fang. 
-* **[Rowena Ravenclaw’s Diadem](https://github.com/vlsi-lab/HORCRUX/tree/diadem):** Hidden in the Room of Requirement; destroyed by Vincent Crabbe's Fiendfyre.
-* **[Salazar Slytherin’s Locket](tree/locket):** Stolen from the Gaunt shack; destroyed by Ron Weasley with Gryffindor's sword. 
-* * **Tom Riddle's Diary:** Destroyed by Harry Potter with a Basilisk fang in the Chamber of Secrets. *(Future/Reserved)*
-* **Marvolo Gaunt’s Ring:** Contained the Resurrection Stone; destroyed by Albus Dumbledore with Gryffindor's sword. *(Future/Reserved)*
-* **Nagini:** Voldemort's snake, destroyed by Neville Longbottom with Gryffindor's sword in the Deathly Hallows. *(Future/Reserved)*
-* **Harry Potter (Accidental):** The piece of soul within Harry was destroyed by Voldemort himself in the Forbidden Forest. *(Future/Reserved)*
+*(Future/Reserved branches include: Diary, Ring, Nagini, and Harry).*
 
 *(Note: Click on the Locket, Cup, or Diadem links to navigate to the respective branch for that specific version of the architecture).*
 
