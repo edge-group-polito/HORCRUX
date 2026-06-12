@@ -1,6 +1,10 @@
+
+
 # HORCRUX
 
 Welcome to the official repository for **HORCRUX**. 
+
+![HORCRUX logo](logo/logo.png)
 
 HORCRUX is an ongoing project representing an evolving lightweight Post-Quantum Cryptography (PQC) RISC-V extension architecture. The development of this project is divided into different stages, with each stage representing a distinct step forward in the architecture's capabilities and implementation.
 
