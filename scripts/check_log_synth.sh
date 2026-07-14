@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Relative paths
-REL_LOG="scripts/synthesis/synthesis/last_output/report/synth.log"
-REL_TIMING="scripts/synthesis/synthesis/last_output/report/timing_loop.rpt"
+REL_LOG="implementation/synthesis/last_output/report/synth.log"
+REL_TIMING="implementation/synthesis/last_output/report/timing_loop.rpt"
 
 # Get absolute paths
 LOG_FILE="$(realpath "$REL_LOG" 2>/dev/null || readlink -f "$REL_LOG")"

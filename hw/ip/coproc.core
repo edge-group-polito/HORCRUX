@@ -1,0 +1,48 @@
+CAPI=2:
+
+# Copyright 2026 POLITO
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+
+# Authors: Valeria Piscopo - valeria.piscopo@polito.it
+#          Alessandra Dolmeta - alessandra.dolmeta@polito.it 
+name: polito:crheepto:coproc
+description: crheepto coprocessors
+
+filesets:
+
+  horcrux_sv:
+    depend:
+    - openhwgroup.org:ip:cv32e40x
+    - esl_epfl:ip:cv32e40px
+    files:
+    - coprocessors/include/horcrux_pkg.sv
+    - coprocessors/sampler.sv
+    - coprocessors/keccak/pkg_keccak.sv
+    - coprocessors/keccak/keccak_cu.sv
+    - coprocessors/keccak/keccak_dp.sv
+    - coprocessors/keccak/keccak_round_constants_gen.sv
+    - coprocessors/keccak/keccak_round.sv
+    - coprocessors/keccak/keccak_f.sv
+    - coprocessors/horcrux_register.sv
+    - coprocessors/unified_mul_32x32.sv
+    - coprocessors/shared_multiplication_logic.sv
+    - coprocessors/fpr.sv
+    - coprocessors/multiplier_tree.sv
+#    - coprocessors/karats.sv
+#    - coprocessors/gf_carryless_mul.sv
+    - coprocessors/barrett.sv
+#    - coprocessors/montg.sv
+    - coprocessors/chain_lengths.sv
+    - coprocessors/sphincs_ops.sv
+    - coprocessors/commit_stage.sv
+    - coprocessors/id_stage.sv
+    - coprocessors/horcrux.sv
+    - coprocessors/horcrux_top.sv
+    - coprocessors/coproc_wrapper.sv
+    file_type: systemVerilogSource
+    
+targets:
+  default:
+    filesets:
+    - horcrux_sv

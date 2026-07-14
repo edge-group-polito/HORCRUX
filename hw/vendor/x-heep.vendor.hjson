@@ -1,0 +1,20 @@
+// Copyright 2024 Politecnico di Torino
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+
+{
+  name: "x-heep",
+  target_dir: "x-heep",
+
+  upstream: {
+    url: "https://github.com/esl-epfl/x-heep.git",
+    rev: "e9561c6b9c79051437bcbb04f3d2867dd660e62a",
+  },
+
+  patch_dir: "patches/x-heep",
+
+  exclude_from_upstream: [
+    ".github",
+    "ci",
+  ]
+}

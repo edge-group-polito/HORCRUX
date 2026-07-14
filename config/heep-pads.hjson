@@ -1,0 +1,344 @@
+// Copyright 2020 ETH Zurich and University of Bologna.
+// Solderpad Hardware License, Version 0.51, see LICENSE for details.
+// SPDX-License-Identifier: SHL-0.51
+// Derived from Occamy: https://github.com/pulp-platform/snitch/blob/master/hw/system/occamy/src/occamy_cfg.hjson
+//
+// Pad configuration for core-v-mini-mcu. Read by mcu_gen.py.
+//
+// For detailed documentation and usage instructions, please refer to docs/source/Configuration/PadConfiguration.md
+
+{
+    placing: {
+        top: 13
+        right: 11
+        bottom: 13
+        left: 11
+    }
+    VDD: 7
+    margins: {
+        top: {
+            1: 0
+            2: 12.2
+            3: 21
+            4: 92
+        }
+        right: {
+            1: 0
+            2: 12.2
+            3: 21
+            4: 92
+        }
+        bottom: {
+            1: 0
+            2: 12.2
+            3: 21
+            4: 92
+        }
+        left: {
+            1: 0
+            2: 12.2
+            3: 21
+            4: 92
+        }
+    }
+    sealring: {
+        topleft: SR_PCORNER_NW
+        topright: SR_PCORNER_NE
+        bottomright: SR_PCORNER_SE
+        bottomleft: SR_PCORNER_SW
+    }
+    ioring: {
+        topleft: {
+            name: i_PCORNER_NW
+            cell: PCORNER
+            }
+        topright: {
+            name: i_PCORNER_NE
+            cell: PCORNER
+            }
+        bottomright: {
+            name: i_PCORNER_SE
+            cell: PCORNER
+            }
+        bottomleft: {
+            name: i_PCORNER_SW
+            cell: PCORNER
+            }
+    }
+    pads: {
+
+        rst: {
+            num: 1
+            active: low
+            driven_manually: True
+            type: input
+        }
+        boot_select: {
+            num: 1
+            type: input
+        }
+        execute_from_flash: {
+            num: 1
+            type: input
+        }
+        jtag_tck: {
+            num: 1
+            type: input
+        }
+        jtag_tms: {
+            num: 1
+            type: input
+        }
+        jtag_trst: {
+            num: 1
+            active: low
+            type: input
+        }
+        jtag_tdi: {
+            num: 1
+            type: input
+        }
+        jtag_tdo: {
+            num: 1
+            type: output
+        }
+        uart_rx: {
+            num: 1
+            type: input
+        }
+        uart_tx: {
+            num: 1
+            type: output
+        }
+        exit_valid: {
+            num: 1
+            type: output
+        }
+        exit_value: {
+            num: 1
+            type: output
+            driven_manually: True
+        }
+        gpio_0: {
+            num: 1
+            type: inout
+        }
+        gpio_1: {
+            num: 1
+            type: inout
+        }
+        gpio_2: {
+            num: 1
+            type: inout
+        }
+        gpio_3: {
+            num: 1
+            type: inout
+        }
+        gpio_4: {
+            num: 1
+            type: inout
+        }
+        spi_flash_sck: {
+            num: 1
+            type: inout
+        }
+        spi_flash_cs: {
+            num: 2 # careful the x-heep uses the CS from the spi pkg change it
+            type: inout
+        }
+        spi_flash_sd: {
+            num: 4
+            type: inout
+        }
+        spi_sck: {
+            num: 1
+            type: inout
+        }
+        spi_cs: {
+            num: 2
+            type: inout
+        }
+        spi_sd: {
+            num: 4
+            type: inout
+        }
+        clk: {
+            num: 1
+            type: input
+        }
+        pdm2pcm_pdm: {
+            num: 1
+            type: bypass_inout
+        }
+        pdm2pcm_clk: {
+            num: 1
+            type: bypass_inout
+        }
+        gpio: {
+            num_offset: 17
+            num: 15
+            type: bypass_inout
+        }
+        spi_slave_sck: {
+            num: 1
+            type: inout
+            mux: {
+                spi_slave_sck: {
+                    type: input
+                }
+                gpio_5: {
+                    type: inout
+                }
+            }
+        }
+        spi_slave_cs: {
+            num: 1
+            type: inout
+            mux: {
+                spi_slave_cs: {
+                    type: input
+                }
+                gpio_6: {
+                    type: inout
+                }
+            }
+        }
+        spi_slave_miso: {
+            num: 1
+            type: inout
+            mux: {
+                spi_slave_miso: {
+                    type: inout
+                }
+                gpio_7: {
+                    type: inout
+                }
+            }
+        }
+        spi_slave_mosi: {
+            num: 1
+            type: inout
+            mux: {
+                spi_slave_mosi: {
+                    type: input
+                }
+                gpio_8: {
+                    type: inout
+                }
+            }
+        }
+        i2s_sck: {
+            num: 1
+            type: inout
+            mux: {
+                i2s_sck: {
+                    type: inout
+                }
+                gpio_9: {
+                    type: inout
+                }
+            }
+        }
+        i2s_ws: {
+            num: 1
+            type: inout
+            mux: {
+                i2s_ws: {
+                    type: inout
+                }
+                gpio_10: {
+                    type: inout
+                }
+            }
+        }
+        i2s_sd: {
+            num: 1
+            type: inout
+            mux: {
+                i2s_sd: {
+                    type: inout
+                }
+                gpio_11: {
+                    type: inout
+                }
+           }
+        }
+        spi2_cs_0: {
+            num: 1
+            type: inout
+            mux: {
+                spi2_cs_0: {
+                    type: inout
+                }
+                gpio_12: {
+                    type: inout
+                }
+            }
+        }
+        spi2_cs_1: {
+            num: 1
+            type: inout
+            mux: {
+                spi2_cs_1: {
+                    type: inout
+                }
+                gpio_13: {
+                    type: inout
+                }
+            }
+        }
+        spi2_sck: {
+            num: 1
+            type: inout
+            mux: {
+                spi2_sck: {
+                    type: inout
+                }
+                gpio_14: {
+                    type: inout
+                }
+            }
+        }
+        spi2_sd_0: {
+            num: 1
+            type: inout
+        }
+        spi2_sd_1: {
+            num: 1
+            type: inout
+        }
+        spi2_sd_2: {
+            num: 1
+            type: inout
+        }
+        spi2_sd_3: {
+            num: 1
+            type: inout
+        }
+        i2c_scl: {
+            num: 1
+            type: inout
+            mux: {
+                i2c_scl: {
+                    type: inout
+                }
+                gpio_15: {
+                    type: inout
+                }
+            }
+        }
+        i2c_sda: {
+            num: 1
+            type: inout
+            mux: {
+                i2c_sda: {
+                    type: inout
+                }
+                gpio_16: {
+                    type: inout
+                }
+            }
+        }
+    }
+}

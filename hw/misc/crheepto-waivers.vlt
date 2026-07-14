@@ -1,0 +1,31 @@
+// Copyright 2022 EPFL and Politecnico di Torino.
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// File: crheepto-waivers.sv
+// Author: Michele Caon, Luigi Giuffrida
+// Date: 14/06/2023
+// Description: Waivers for crheepto top-level
+
+`verilator_config
+
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Bits of signal are not used: 'exit_value'[31:1]"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Bits of signal are not used: 'memory_subsystem_banks_powergate_switch'[0]"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Signal is not used: 'mem_sw_fb_sync'"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Signal is not used: '*_powergate_*'"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Signal is not used: '*_retentive_*'"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Signal is not used: '*ext*'"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Signal is not used: '*out_x'"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Signal is not used: '*oe_x'"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Signal is not*used: '*_req'"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Signal is not*used: '*_rsp'"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Signal is not*used: '*_resp'"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Signal is not*used: '*in_x'"
+lint_off -rule UNUSED -file "*crheepto_top.sv" -match "Bits of signal are not used: 'external_subsystem_powergate_switch_n'[1]"
+
+lint_off -rule UNDRIVEN -file "*crheepto_top.sv" -match "Signal is not driven: '*_powergate_*'"
+lint_off -rule UNDRIVEN -file "*crheepto_top.sv" -match "Signal is not driven: '*out_x'"
+lint_off -rule UNDRIVEN -file "*crheepto_top.sv" -match "Signal is not driven: '*_req'"
+lint_off -rule UNDRIVEN -file "*crheepto_top.sv" -match "Signal is not driven: '*_rsp'"
+lint_off -rule UNDRIVEN -file "*crheepto_top.sv" -match "Signal is not driven: '*_resp'"
+lint_off -rule UNDRIVEN -file "*crheepto_top.sv" -match "Bits of signal are not driven: 'external_subsystem_powergate_switch_ack_n'[1]"

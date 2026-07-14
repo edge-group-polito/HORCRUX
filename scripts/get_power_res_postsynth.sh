@@ -1,30 +1,33 @@
 #!/usr/bin/env bash
 # get_power_res_postsynth
-# Compile all apps listed in ./PQC-tests-DAC_poweranalysis.md, then for each (ver,test):
-#   - make run-tests-postsynth-<ver>-<test> (in .)
-#   - make power-analysis (in .)
-#   - mv implementation/power_analysis/reports -> implementation/power_analysis/reports_<test>-<ver>
+# Iterate over subfolders in sw/applications/tests-power and for each test:
+#   1) make app-tests-power-<test_name>
+#   2) make questasim-run-postsynth VCD_MODE=2
+#   3) make power-analysis (SW: waves-0.vcd)
+#   4) Rename reports -> reports_<test_name>_sw
+#   5) Change makefile to use waves-1.vcd
+#   6) make power-analysis (HW: waves-1.vcd)
+#   7) Rename reports -> reports_<test_name>_hw
+#   8) Restore makefile to waves-0.vcd
 #
 # Fixed paths:
 #   - Makefile directory: "."
-#   - Commands file: "./PQC-tests-DAC_poweranalysis.md"
+#   - Tests-power dir: "sw/applications/tests-power"
 #   - Reports dir: "implementation/power_analysis/reports"
 #
 # Optional filters:
-#   --only-ver {simple|custom|both} (default: both)
-#   --only-tests keccak,cbd_eta1,... (comma-separated list)
+#   --only-tests keccak,cbd_eta2,... (comma-separated list)
 #   --dry-run (print actions only)
 
 set -euo pipefail
 
 # ---------- Fixed configuration ----------
 MAKE_CWD="."
-COMMANDS_FILE="./PQC-tests-DAC_poweranalysis.md"
+TESTS_POWER_DIR="sw/applications/tests-power"
 REPORTS_DIR="implementation/power_analysis/reports"
+MAKEFILE="makefile"
 
 # ---------- Defaults for optional filters ----------
-WANT_SIMPLE=1
-WANT_CUSTOM=1
 ONLY_TESTS=""
 DRY_RUN=0
 
@@ -34,34 +37,28 @@ run() { if [[ $DRY_RUN -eq 1 ]]; then echo "DRYRUN: $*"; else eval "$@"; fi; }
 
 usage() {
   cat <<EOF
-Usage: $0 [--only-ver simple|custom|both] [--only-tests LIST] [--dry-run]
+Usage: $0 [--only-tests LIST] [--dry-run]
 
 Fixed paths:
-  Makefile dir : ${MAKE_CWD}
-  Commands file: ${COMMANDS_FILE}
-  Reports dir  : ${REPORTS_DIR}
+  Makefile dir   : ${MAKE_CWD}
+  Tests-power dir: ${TESTS_POWER_DIR}
+  Reports dir    : ${REPORTS_DIR}
 
-Flow:
-  1) Parse (ver,test) pairs from lines like: 'make app-tests-<ver>-<test>'
-  2) Compile: make app-tests-<ver>-<test> VER=<ver> TESTS=<test>
-  3) Run    : make run-tests-postsynth-<ver>-<test> VER=<ver> TESTS=<test>
-  4) Power  : make power-analysis
-  5) Rename : ${REPORTS_DIR} -> ${REPORTS_DIR}_<test>-<ver>
+Flow (for each test subfolder):
+  1) Build   : make app-tests-power-<test_name>
+  2) Simulate: make questasim-run-postsynth VCD_MODE=2
+  3) Power SW: make power-analysis (using waves-0.vcd)
+  4) Rename  : ${REPORTS_DIR} -> ${REPORTS_DIR}_<test_name>_sw
+  5) Modify  : PWR_VCD to use waves-1.vcd
+  6) Power HW: make power-analysis (using waves-1.vcd)
+  7) Rename  : ${REPORTS_DIR} -> ${REPORTS_DIR}_<test_name>_hw
+  8) Restore : PWR_VCD back to waves-0.vcd
 EOF
 }
 
 # ---------- Parse args ----------
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --only-ver)
-      case "$2" in
-        simple) WANT_SIMPLE=1; WANT_CUSTOM=0 ;;
-        custom) WANT_SIMPLE=0; WANT_CUSTOM=1 ;;
-        both)   WANT_SIMPLE=1; WANT_CUSTOM=1 ;;
-        *) die "Invalid --only-ver '$2' (use simple|custom|both)";;
-      esac
-      shift 2
-      ;;
     --only-tests)
       ONLY_TESTS="$2"
       shift 2
@@ -81,7 +78,8 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ -d "$MAKE_CWD" ]] || die "Make directory not found: $MAKE_CWD"
-[[ -f "$COMMANDS_FILE" ]] || die "Commands file not found: $COMMANDS_FILE"
+[[ -d "$TESTS_POWER_DIR" ]] || die "Tests-power directory not found: $TESTS_POWER_DIR"
+[[ -f "$MAKEFILE" ]] || die "Makefile not found: $MAKEFILE"
 
 # ---------- Build filters ----------
 declare -A ONLY_MAP=()
@@ -93,81 +91,94 @@ if [[ -n "$ONLY_TESTS" ]]; then
   done
 fi
 
-declare -A WANT_VER=()
-(( WANT_SIMPLE )) && WANT_VER["simple"]=1
-(( WANT_CUSTOM )) && WANT_VER["custom"]=1
-
-# ---------- Parse (ver,test) pairs from the commands file ----------
-declare -A PAIRS=()  # key "ver|test" -> 1
-while IFS= read -r line; do
-  l="$(echo "$line" | sed -E 's/^[[:space:]]+//;s/[[:space:]]+$//')"
-  # Match lines like: make app-tests-simple-<test> ... or app-tests-custom-<test> ...
-  if [[ "$l" =~ ^make[[:space:]]+app-tests-(simple|custom)-([A-Za-z0-9_]+) ]]; then
-    ver="${BASH_REMATCH[1]}"
-    test="${BASH_REMATCH[2]}"
-  else
-    continue
-  fi
-  [[ -n "${WANT_VER[$ver]:-}" ]] || continue
-  if [[ ${#ONLY_MAP[@]} -gt 0 && -z "${ONLY_MAP[$test]:-}" ]]; then
-    continue
-  fi
-  PAIRS["$ver|$test"]=1
-done < "$COMMANDS_FILE"
-
-(( ${#PAIRS[@]} > 0 )) || die "No (ver,test) pairs found in ${COMMANDS_FILE} after filters."
-
-# ---------- Order pairs (stable: by ver then test) ----------
-declare -a VER_ARR=()
+# ---------- Discover test subfolders ----------
 declare -a TEST_ARR=()
-for key in "${!PAIRS[@]}"; do
-  VER_ARR+=( "${key%%|*}" )
-  TEST_ARR+=( "${key##*|}" )
+for dir in "$TESTS_POWER_DIR"/*/; do
+  [[ -d "$dir" ]] || continue
+  test_name="$(basename "$dir")"
+  # Skip if filtering and test not in list
+  if [[ ${#ONLY_MAP[@]} -gt 0 && -z "${ONLY_MAP[$test_name]:-}" ]]; then
+    continue
+  fi
+  TEST_ARR+=( "$test_name" )
 done
 
-if command -v paste >/dev/null; then
-  mapfile -t SORTED < <(paste <(printf "%s\n" "${VER_ARR[@]}") <(printf "%s\n" "${TEST_ARR[@]}") | sort)
-  VER_ARR=(); TEST_ARR=()
-  for row in "${SORTED[@]}"; do
-    ver="${row%%$'\t'*}"
-    test="${row#*$'\t'}"
-    VER_ARR+=( "$ver" )
-    TEST_ARR+=( "$test" )
-  done
-fi
+# Sort tests alphabetically
+IFS=$'\n' TEST_ARR=($(sort <<<"${TEST_ARR[*]}")); unset IFS
 
-say "Discovered ${#VER_ARR[@]} (ver,test) pair(s) from ${COMMANDS_FILE}."
+(( ${#TEST_ARR[@]} > 0 )) || die "No test subfolders found in ${TESTS_POWER_DIR} after filters."
 
-# ---------- Phase 1: Compile all ----------
-say "=== Compile phase ==="
-for i in "${!VER_ARR[@]}"; do
-  ver="${VER_ARR[$i]}"; test="${TEST_ARR[$i]}"
-  app_target="app-tests-${ver}-${test}"
-  say "Compile: ${app_target}"
-  run "make -C \"$MAKE_CWD\" ${app_target} VER=${ver} TESTS=${test}"
+say "Discovered ${#TEST_ARR[@]} test(s) in ${TESTS_POWER_DIR}:"
+for t in "${TEST_ARR[@]}"; do
+  say "  - $t"
 done
 
-# ---------- Phase 2: Run + power-analysis + rename ----------
-say "=== Run + power-analysis phase ==="
-for i in "${!VER_ARR[@]}"; do
-  ver="${VER_ARR[$i]}"; test="${TEST_ARR[$i]}"
+# ---------- Helper: switch PWR_VCD between waves-0 and waves-1 ----------
+set_pwr_vcd() {
+  local vcd_num="$1"  # 0 or 1
+  say "Setting PWR_VCD to waves-${vcd_num}.vcd"
+  if [[ $DRY_RUN -eq 1 ]]; then
+    echo "DRYRUN: sed -i 's|waves-[01]\\.vcd|waves-${vcd_num}.vcd|' \"$MAKEFILE\""
+  else
+    sed -i "s|waves-[01]\\.vcd|waves-${vcd_num}.vcd|" "$MAKEFILE"
+  fi
+}
 
-  run_target="run-tests-postsynth-${ver}-${test}"
-  say "Run: ${run_target}"
-  run "make -C \"$MAKE_CWD\" ${run_target} VER=${ver} TESTS=${test}"
+# ---------- Main loop: for each test ----------
+say "=== Starting power analysis flow ==="
+for test_name in "${TEST_ARR[@]}"; do
+  say "========================================"
+  say "Processing test: ${test_name}"
+  say "========================================"
 
-  say "Power analysis"
+  # Step 1: Build the test application
+  say "[Step 1] Build: make app PROJECT=tests-power/${test_name}"
+  run "make -C \"$MAKE_CWD\" app PROJECT=tests-power/${test_name}"
+
+  # Step 2: Run questasim post-synthesis simulation
+  say "[Step 2] Simulate: make questasim-run-postsynth VCD_MODE=2"
+  run "make -C \"$MAKE_CWD\" questasim-run-postsynth VCD_MODE=2"
+
+  # Step 3: Power analysis (SW - waves-0.vcd)
+  say "[Step 3] Power analysis (SW - waves-0.vcd)"
+  set_pwr_vcd 0
   run "make -C \"$MAKE_CWD\" power-analysis"
 
-  if [[ -d "$REPORTS_DIR" ]]; then
-    dest="${REPORTS_DIR}_${test}-${ver}"
-    say "Renaming \"$REPORTS_DIR\" -> \"$dest\" (overwriting if exists)"
-    # Remove previous destination (careful: this is destructive)
-    run "rm -rf \"$dest\""
-    run "mv \"$REPORTS_DIR\" \"$dest\""
+  # Step 4: Rename reports to _sw
+  if [[ -d "$REPORTS_DIR" || $DRY_RUN -eq 1 ]]; then
+    dest_sw="${REPORTS_DIR}_${test_name}_sw"
+    say "[Step 4] Renaming \"$REPORTS_DIR\" -> \"$dest_sw\""
+    run "rm -rf \"$dest_sw\""
+    run "mv \"$REPORTS_DIR\" \"$dest_sw\""
   else
-    say "WARNING: Reports dir not found: $REPORTS_DIR (skipping rename)"
+    say "WARNING: Reports dir not found: $REPORTS_DIR (skipping rename for SW)"
   fi
+
+  # Step 5: Switch to waves-1.vcd for HW analysis
+  say "[Step 5] Switching to waves-1.vcd for HW analysis"
+  set_pwr_vcd 1
+
+  # Step 6: Power analysis (HW - waves-1.vcd)
+  say "[Step 6] Power analysis (HW - waves-1.vcd)"
+  run "make -C \"$MAKE_CWD\" power-analysis"
+
+  # Step 7: Rename reports to _hw
+  if [[ -d "$REPORTS_DIR" || $DRY_RUN -eq 1 ]]; then
+    dest_hw="${REPORTS_DIR}_${test_name}_hw"
+    say "[Step 7] Renaming \"$REPORTS_DIR\" -> \"$dest_hw\""
+    run "rm -rf \"$dest_hw\""
+    run "mv \"$REPORTS_DIR\" \"$dest_hw\""
+  else
+    say "WARNING: Reports dir not found: $REPORTS_DIR (skipping rename for HW)"
+  fi
+
+  # Restore waves-0.vcd for next iteration
+  say "[Cleanup] Restoring PWR_VCD to waves-0.vcd"
+  set_pwr_vcd 0
+
+  say "Completed: ${test_name}"
 done
 
-say "All done."
+say "========================================"
+say "All ${#TEST_ARR[@]} tests completed!"
+say "========================================"

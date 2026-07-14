@@ -1,0 +1,30 @@
+// Copyright 2024 Politecnico di Torino.
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// File: crheepto-cgf.hjson
+// Author: Luigi Giuffrida, Valeria Piscopo
+// Date: 09/01/2026
+// Description: Configuration file for crheepto
+
+{
+    // CORE-V-MINI-MCU features
+    cpu_features: {
+        corev_pulp: true,
+        corev_xif: true,
+        fpu: true,
+        riscv_zfinx: false,
+    },
+
+    // Slaves memory map
+    ext_xbar_masters: {},
+    ext_xbar_slaves: {},
+
+    // External peripherals
+    ext_periph: {},
+
+    // ao_spc_num: 1,
+
+    external_interrupts: 0,
+
+}

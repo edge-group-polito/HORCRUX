@@ -1,0 +1,38 @@
+CAPI=2:
+
+# Copyright 2024 Politecnico di Torino.
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# File: packages.core
+# Author: Luigi Giuffrida, Valeria Piscopo
+# Date: 09/01/2026
+# Description: corefile for crheepto package
+
+
+name: polito:crheepto:packages
+description: crheepto package
+
+filesets:
+  rtl:
+    depend:
+    - openhwgroup.org:systems:core-v-mini-mcu
+    - x-heep::packages
+    - polito:crheepto:coproc
+    files:
+    - packages/crheepto_pkg.sv
+    file_type: systemVerilogSource
+  
+  rtl-format:
+    files:
+    - packages/crheepto_pkg.sv
+    file_type: systemVerilogSource
+
+targets:
+  default: &default
+    filesets:
+      - "!target_format ? (!target_lint ? (rtl))"
+      - target_format ? (rtl-format)
+      - target_lint ? (rtl-format)
+
+

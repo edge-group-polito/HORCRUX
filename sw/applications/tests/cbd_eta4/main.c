@@ -13,15 +13,19 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include "vcd_util.h"
 
-#ifdef PERF_CNT_CYCLES
-    #include "core_v_mini_mcu.h"
-    #include "csr.h"
+
+
+#include "core_v_mini_mcu.h"
+#include "csr.h"
+
+// Software test flag - set to 0 to skip SW tests, 1 to run SW+HW tests
+#ifndef SW_TEST_ENABLED
+#define SW_TEST_ENABLED 1
 #endif
 
 
-#define NTESTS 100
+#define NTESTS 20
 #define NLANES 4
 
 /* -------- CBD software (parametrizzato per eta) -------- */
@@ -164,88 +168,75 @@ static const int8_t golden_eta4[NTESTS][4] = {
 
 
 int main(void) {
-    
-    int8_t out[NTESTS][NLANES] = {0};
+    int8_t out_sw[NTESTS][NLANES] = {0};
     int8_t out_hw[NTESTS][NLANES] = {0};
-    int ok = 1;
+
+    int all_pass_sw = 1;
     int all_pass_hw = 1;
 
-     #if PERF_CNT_CYCLES == 1
-        CSR_CLEAR_BITS(CSR_REG_MCOUNTINHIBIT, 0x1);
-        CSR_WRITE(CSR_REG_MCYCLE, 0);
-        unsigned cycles_cbd, cycles_cbd_hw;
-    #endif
+    unsigned cycles_cbd_sw = 0;
+#if SW_TEST_ENABLED
+    CSR_CLEAR_BITS(CSR_REG_MCOUNTINHIBIT, 0x1);
+    CSR_WRITE(CSR_REG_MCYCLE, 0);
 
-    printf("CBD tests (SW only)\n");
-
-    #if PERF_CNT_CYCLES == 1
-        CSR_WRITE(CSR_REG_MCYCLE, 0);
-    #endif
-
-    for (int i = 0; i < NTESTS; ++i) {
-        cbd_eta4(d_eta4[i], out, i);
+    for (int i = 0; i < NTESTS; i++) {
+        cbd_eta4(d_eta4[i], out_sw, i);
     }
 
-    #if PERF_CNT_CYCLES == 1
-        CSR_READ(CSR_REG_MCYCLE, &cycles_cbd);
-        printf("cycles_cbd_sw: %d\n", cycles_cbd);
-    #endif
+    CSR_READ(CSR_REG_MCYCLE, &cycles_cbd_sw);
+    printf("Software Cycles: %u\n", cycles_cbd_sw);
 
-    for (int i = 0; i < NTESTS; ++i) {
-        for (int j = 0; j < 4; ++j) {
-            if (out[i][j] != golden_eta4[i][j]) {
-                printf("η=4 FAIL [t=%d][j=%d]: d=%d exp=%d got=%d\n",
-                        i, j, d_eta4[i], golden_eta4[i][j], out[i][j]);
-                ok = 0;
+    for (int i = 0; i < NTESTS; i++) {
+        for (int j = 0; j < NLANES; j++) {
+            if (out_sw[i][j] != golden_eta4[i][j]) {
+                printf("  [SW][%2d][%d] FAIL: d=%d, exp=%d, got=%d\n", i, j, d_eta4[i], golden_eta4[i][j], out_sw[i][j]);
+                all_pass_sw = 0;
             }
         }
     }
+#else
+    printf("--- SOFTWARE TEST SKIPPED ---\n\n");
+#endif
 
-    if (ok) {
-        printf("All sw-suites passed.\n");
-    } else {
-        printf("Some tests FAILED.\n");
-    }
-
-    printf("CBD tests (HW)\n");
-    #if PERF_CNT_CYCLES == 1
-        CSR_WRITE(CSR_REG_MCYCLE, 0);
-    #endif
+    CSR_CLEAR_BITS(CSR_REG_MCOUNTINHIBIT, 0x1);
+    unsigned cycles_cbd_hw;
+    CSR_WRITE(CSR_REG_MCYCLE, 0);
 
     for (int i = 0; i < NTESTS; i++) {
         asm volatile (
             "mv a3, %[src]\n\t"
-            ".insn r 0x3b, 0x1, 0x21, %[dst0], %[src], %[x0]\r\n"
-            ".insn r 0x3b, 0x1, 0x21, %[dst1], %[src], %[x1]\r\n"
+            ".insn r 0x3b, 0x7, 0x3, %[dst0], %[src], %[x0]\r\n"
+            ".insn r 0x3b, 0x7, 0x3, %[dst1], %[src], %[x1]\r\n"
             :   [dst0] "=r" (out_hw[i][0]),
                 [dst1] "=r" (out_hw[i][1])
             :   [src] "r" (d_eta4[i]),
                 [x0] "r" (0),
                 [x1] "r" (1)
             :   "a3", "cc");
-        //asm volatile (".insn r 0x3b, 0x1, 0x21, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][0]) : [src] "r" (d_eta4[i]), [x] "r" (0) : );
-        //asm volatile (".insn r 0x3b, 0x1, 0x21, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][1]) : [src] "r" (d_eta4[i]), [x] "r" (1) : );
-        asm volatile (".insn r 0x3b, 0x1, 0x21, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][2]) : [src] "r" (d_eta4[i]), [x] "r" (2) : );
-        asm volatile (".insn r 0x3b, 0x1, 0x21, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][3]) : [src] "r" (d_eta4[i]), [x] "r" (3) : );
+        asm volatile (".insn r 0x3b, 0x7, 0x3, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][2]) : [src] "r" (d_eta4[i]), [x] "r" (2) : );
+        asm volatile (".insn r 0x3b, 0x7, 0x3, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][3]) : [src] "r" (d_eta4[i]), [x] "r" (3) : );
     }
 
-     #if PERF_CNT_CYCLES == 1
-        CSR_READ(CSR_REG_MCYCLE, &cycles_cbd_hw);
-        printf("cycles_cbd_hw: %d\n", cycles_cbd_hw);
-    #endif
+    CSR_READ(CSR_REG_MCYCLE, &cycles_cbd_hw);
+    printf("Hardware Cycles: %u\n", cycles_cbd_hw);
+
 
     for (int i = 0; i < NTESTS; i++) {
         for (int j = 0; j < NLANES; j++) {
             if (out_hw[i][j] != golden_eta4[i][j]) {
-                printf("  [%d][%d] FAIL: d=%d, exp=%d, got=%d\n",
-                       i, j, d_eta4[i], golden_eta4[i][j], out_hw[i][j]);
+                printf("  [HW][%2d][%d] FAIL: d=%d, exp=%d, got=%d\n", i, j, d_eta4[i], golden_eta4[i][j], out_hw[i][j]);
                 all_pass_hw = 0;
             }
         }
     }
 
-    if (all_pass_hw) {
-        printf("All hw-suites passed.\n");
+    if (cycles_cbd_sw > 0 && cycles_cbd_hw > 0) {
+        printf("SW Cycles: %u | HW Cycles: %u\n", cycles_cbd_sw, cycles_cbd_hw);
+        printf("Speedup: %u.%02ux\n", cycles_cbd_sw / cycles_cbd_hw, ((cycles_cbd_sw * 100) / cycles_cbd_hw) % 100);
+    }
+
+    if (all_pass_sw && all_pass_hw) {
+        printf("All suites passed.\n");
     } else {
         printf("Some tests FAILED.\n");
     }

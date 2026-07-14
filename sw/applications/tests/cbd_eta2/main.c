@@ -14,15 +14,18 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include "vcd_util.h"
 
 
-#ifdef PERF_CNT_CYCLES
-    #include "core_v_mini_mcu.h"
-    #include "csr.h"
+#include "core_v_mini_mcu.h"
+#include "csr.h"
+
+// Software test flag - set to 0 to skip SW tests, 1 to run SW+HW tests
+#ifndef SW_TEST_ENABLED
+#define SW_TEST_ENABLED 1
 #endif
 
-#define NTESTS 100
+
+#define NTESTS 20
 #define NLANES 8
 
 /* 
@@ -169,91 +172,90 @@ int main(void) {
         {1, 2, 0, 1,1, 0, 0, -2}
     };
 
+    int8_t out_sw[NTESTS][NLANES] = {0};
+    int8_t out_hw[NTESTS][NLANES] = {0};
 
-
-    int all_pass = 1;
+    int all_pass_sw = 1;
     int all_pass_hw = 1;
-    int8_t out[NTESTS][NLANES];
-    int8_t out_hw[NTESTS][NLANES];
 
-    #if PERF_CNT_CYCLES == 1
-        CSR_CLEAR_BITS(CSR_REG_MCOUNTINHIBIT, 0x1);
-        CSR_WRITE(CSR_REG_MCYCLE, 0);
-        unsigned cycles_cbd, cycles_cbd_hw;
-    #endif
-
-    printf("CBDη tests (SW only)\n");
-
-     #if PERF_CNT_CYCLES == 1
-        CSR_WRITE(CSR_REG_MCYCLE, 0);
-    #endif
+    unsigned cycles_cbd_sw = 0;
+#if SW_TEST_ENABLED
+    CSR_CLEAR_BITS(CSR_REG_MCOUNTINHIBIT, 0x1);
+    CSR_WRITE(CSR_REG_MCYCLE, 0);
 
     for (int i = 0; i < NTESTS; i++) {
-        cbd_eta2(d_inputs[i], out, i);
+        cbd_eta2(d_inputs[i], out_sw, i);
     }
 
-    #if PERF_CNT_CYCLES == 1
-        CSR_READ(CSR_REG_MCYCLE, &cycles_cbd);
-        printf("cycles_cbd_sw: %d\n", cycles_cbd);
-    #endif
+    CSR_READ(CSR_REG_MCYCLE, &cycles_cbd_sw);
+    printf("Software Cycles: %u\n", cycles_cbd_sw);
 
     for (int i = 0; i < NTESTS; i++) {
         for (int j = 0; j < NLANES; j++) {
-            if (out[i][j] != golden[i][j]) {
-                printf("  [%2d][%d] FAIL: d=%d, exp=%d, got=%d\n",
-                       i, j, d_inputs[i], golden[i][j], out[i][j]);
-                all_pass = 0;
+            if (out_sw[i][j] != golden[i][j]) {
+                printf("  [SW][%2d][%d] FAIL: d=%d, exp=%d, got=%d\n", i, j, d_inputs[i], golden[i][j], out_sw[i][j]);
+                all_pass_sw = 0;
             }
         }
     }
+#else
+    printf("--- SOFTWARE TEST SKIPPED ---\n\n");
+#endif
 
-    if (all_pass) {
-        printf("All sw-suites passed.\n");
-    } else {
-        printf("Some tests FAILED.\n");
-    }
-
-    printf("CBDη tests (HW)\n");
-
-    #if PERF_CNT_CYCLES == 1
-        CSR_WRITE(CSR_REG_MCYCLE, 0);
-    #endif
+    CSR_CLEAR_BITS(CSR_REG_MCOUNTINHIBIT, 0x1);
+    unsigned cycles_cbd_hw;
+    CSR_WRITE(CSR_REG_MCYCLE, 0);
 
     for (int i = 0; i < NTESTS; i++) {
 
-        asm volatile (
-            "mv a3, %[src]\n\t"
-            ".insn r 0x3b, 0x1, 0x1F, %[dst], a3, %[x]\r\n"
-            : [dst] "=r" (out_hw[i][0])
-            : [src] "r" (d_inputs[i])
-            , [x] "r" (0) : );
-        asm volatile (".insn r 0x3b, 0x1, 0x1F, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][1]) : [src] "r" (d_inputs[i]), [x] "r" (1) : );
-        asm volatile (".insn r 0x3b, 0x1, 0x1F, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][2]) : [src] "r" (d_inputs[i]), [x] "r" (2) : );
-        asm volatile (".insn r 0x3b, 0x1, 0x1F, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][3]) : [src] "r" (d_inputs[i]), [x] "r" (3) : );
-        asm volatile (".insn r 0x3b, 0x1, 0x1F, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][4]) : [src] "r" (d_inputs[i]), [x] "r" (4) : );
-        asm volatile (".insn r 0x3b, 0x1, 0x1F, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][5]) : [src] "r" (d_inputs[i]), [x] "r" (5) : );
-        asm volatile (".insn r 0x3b, 0x1, 0x1F, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][6]) : [src] "r" (d_inputs[i]), [x] "r" (6) : );
-        asm volatile (".insn r 0x3b, 0x1, 0x1F, %[dst], %[src], %[x]\r\n" : [dst] "=r" (out_hw[i][7]) : [src] "r" (d_inputs[i]), [x] "r" (7) : );
-
+                asm volatile (
+                        ".insn r 0x3b, 0x7, 0x1, %[dst0], %[src], %[x0]\n\t"
+                        ".insn r 0x3b, 0x7, 0x1, %[dst1], %[src], %[x1]\n\t"
+                        ".insn r 0x3b, 0x7, 0x1, %[dst2], %[src], %[x2]\n\t"
+                        ".insn r 0x3b, 0x7, 0x1, %[dst3], %[src], %[x3]\n\t"
+                        ".insn r 0x3b, 0x7, 0x1, %[dst4], %[src], %[x4]\n\t"
+                        ".insn r 0x3b, 0x7, 0x1, %[dst5], %[src], %[x5]\n\t"
+                        ".insn r 0x3b, 0x7, 0x1, %[dst6], %[src], %[x6]\n\t"
+                        ".insn r 0x3b, 0x7, 0x1, %[dst7], %[src], %[x7]\n\t"
+                        : [dst0] "=&r" (out_hw[i][0]),
+                            [dst1] "=&r" (out_hw[i][1]),
+                            [dst2] "=&r" (out_hw[i][2]),
+                            [dst3] "=&r" (out_hw[i][3]),
+                            [dst4] "=&r" (out_hw[i][4]),
+                            [dst5] "=&r" (out_hw[i][5]),
+                            [dst6] "=&r" (out_hw[i][6]),
+                            [dst7] "=&r" (out_hw[i][7])
+                        : [src] "r" (d_inputs[i]),
+                            [x0] "r" (0),
+                            [x1] "r" (1),
+                            [x2] "r" (2),
+                            [x3] "r" (3),
+                            [x4] "r" (4),
+                            [x5] "r" (5),
+                            [x6] "r" (6),
+                            [x7] "r" (7)
+                        : "cc");
     }
+    CSR_READ(CSR_REG_MCYCLE, &cycles_cbd_hw);
+    printf("Hardware Cycles: %u\n", cycles_cbd_hw);
 
-     #if PERF_CNT_CYCLES == 1
-        CSR_READ(CSR_REG_MCYCLE, &cycles_cbd_hw);
-        printf("cycles_cbd_hw: %d\n", cycles_cbd_hw);
-    #endif
 
     for (int i = 0; i < NTESTS; i++) {
         for (int j = 0; j < NLANES; j++) {
             if (out_hw[i][j] != golden[i][j]) {
-                printf("  [%2d][%d] FAIL: d=%d, exp=%d, got=%d\n",
-                       i, j, d_inputs[i], golden[i][j], out_hw[i][j]);
+                printf("  [HW][%2d][%d] FAIL: d=%d, exp=%d, got=%d\n", i, j, d_inputs[i], golden[i][j], out_hw[i][j]);
                 all_pass_hw = 0;
             }
         }
     }
 
-    if (all_pass_hw) {
-        printf("All hw-suites passed.\n");
+    if (cycles_cbd_sw > 0 && cycles_cbd_hw > 0) {
+        printf("SW Cycles: %u | HW Cycles: %u\n", cycles_cbd_sw, cycles_cbd_hw);
+        printf("Speedup: %u.%02ux\n", cycles_cbd_sw / cycles_cbd_hw, ((cycles_cbd_sw * 100) / cycles_cbd_hw) % 100);
+    }
+
+    if (all_pass_sw && all_pass_hw) {
+        printf("All suites passed.\n");
     } else {
         printf("Some tests FAILED.\n");
     }

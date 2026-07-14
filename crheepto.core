@@ -1,0 +1,568 @@
+CAPI=2:
+
+# Copyright 2024 Politecnico di Torino.
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# File: crheepto.core
+# Author: Luigi Giuffrida, Valeria Piscopo, Alessandra Dolmeta
+# Date: 09/01/2026
+# Description: Top-level file for crheepto
+
+name: polito:vlsi:crheepto
+description: Top-level file for crheepto
+filesets:
+  # The fileset containing the top-level HDL files
+  rtl:
+    depend:
+    - polito:crheepto:packages
+    - polito:crheepto:peripherals
+    - polito:crheepto:ext_bus
+    - polito:crheepto:coproc
+    files:
+    - hw/ip/crheepto_top.sv
+    - hw/ip/pad-ring/pad_ring.sv
+    file_type: systemVerilogSource
+
+  # The fileset containing the top-level HDL files to be formatted and linted
+  rtl-format:
+    depend:
+      - polito:crheepto:packages
+    files:
+    - hw/ip/crheepto_top.sv
+    - hw/ip/pad-ring/pad_ring.sv
+    file_type: systemVerilogSource
+
+  # X-HEEP RTL (separated to avoid Verible errors)
+  rtl-x-heep:
+    depend:
+    - openhwgroup.org:systems:core-v-mini-mcu
+    - x-heep::packages
+    - x-heep:ip:pad_control
+
+  postsynthesis-netlist:
+    files:
+    - implementation/synthesis/last_output/report/netlist.v
+    file_type: verilogSource
+
+  postlayout-netlist:
+    files:
+    - implementation/layout/artefacts_latest/export/crheepto_pg.v
+    file_type: verilogSource
+
+  # RTL FPGA wrapper
+  rtl-fpga:
+    depend:
+    - polito:crheepto:peripherals
+    - openhwgroup.org:systems:core-v-mini-mcu-fpga
+    files:
+    - hw/fpga/xilinx_crheepto_wrapper.sv
+    file_type: systemVerilogSource
+
+  # RTL testbench system
+  tb-system:
+    depend:
+      - example:ip:i2s_microphone
+      - polito:crheepto:packages
+    files:
+    - tb/tb_system.sv
+    - tb/tb_util.svh: {is_include_file: true}
+    file_type: systemVerilogSource
+
+  # Verilator C++ testbench
+  tb-verilator:
+    files:
+    - tb/verilator/tb_macros.cpp
+    - tb/verilator/crheepto_tb.cpp
+    - tb/verilator/tb_macros.hh: {is_include_file: true}
+    file_type: cppSource
+
+  # Modelsim/VCS testbench
+  # NOTE: defined separately to avoid formatting
+  tb-others:
+    files:
+    - tb/tb_top.sv
+    file_type: systemVerilogSource
+
+  # Modelsim/VCS testbench vendored modules
+  tb-others-vendor:
+    depend:
+    - ::spiflash:0
+
+    # Verilator waviver files
+  verilator-waivers:
+    files:
+    - tb/misc/tb-waivers.vlt
+    - hw/misc/crheepto-waivers.vlt
+    - hw/misc/heep-waivers.vlt
+    file_type: vlt
+
+  # RTL testbench system vendored modules
+  # NOTE: defined separately to avoid formatting
+  tb-system-vendor:
+    depend:
+    - lowrisc:dv_dpi:uartdpi
+    - example:ip:gpio_cnt
+
+  # Scripts for hooks
+  pre_build_uartdpi:
+    files:
+    - scripts/sim/compile_uart_dpi.sh
+    file_type: user
+
+scripts:
+  # QuestaSim build uartdip
+  pre_build_uartdpi:
+    cmd:
+    - bash
+    - ../../../scripts/sim/compile_uart_dpi.sh
+
+  pre_patch_modelsim_Makefile:
+    cmd:
+    - python
+    - ../../../hw/vendor/x-heep/scripts/sim/modelsim/patch_modelsim_Makefile.py
+
+  pre_build_modelsim_scripts_postlayout:
+    cmd:
+    - bash
+    - ../../../scripts/sim/async_pl_tcheck.sh
+
+  # Copy waveforms in common directory
+  prepare_dirs:
+    cmd: ["mkdir", "-p", "../../sim-common"]
+
+  copy_waves:
+    cmd: ["ln", "-srf", "logs/waves.fst", "../../sim-common/waves.fst"]
+
+targets:
+  default: &default
+    filesets:
+    - rtl
+    - rtl-x-heep
+    toplevel: crheepto_top
+    
+  
+  asic_synthesis: &asic_synthesis
+    <<: *default
+    default_tool: design_compiler
+    description: Synthesize the design using Design Compiler
+    parameters_append:
+    - SYNTHESIS=true
+    filesets_append:
+    - rtl-xxxlib
+    toplevel: [crheepto_top]
+    default_tool: design_compiler
+    tools:
+      design_compiler:
+        script_dir:
+        - ../../../implementation/design_compiler
+        report_dir:
+        - report
+        dc_script:
+        - dc_script.tcl
+
+    toplevel: crheepto_top
+  
+  # RTL simulation
+  sim: &sim
+    <<: *default
+    description: Simulate the design using Verilator
+    default_tool: verilator
+    filesets_append:
+    - tb-system
+    - tb-system-vendor
+    - "!tool_verilator ? (tb-others)"
+    - "!tool_verilator ? (tb-others-vendor)"
+    - tool_verilator ? (tb-verilator)
+    - tool_verilator ? (verilator-waivers)
+    - tool_modelsim? (pre_build_uartdpi)
+    toplevel:
+    - tool_verilator ? (tb_system)
+    - "!tool_verilator ? (tb_top)"
+    hooks:
+      pre_build:
+      - tool_modelsim? (pre_build_uartdpi)
+      - tool_modelsim? (pre_patch_modelsim_Makefile)
+      pre_run:
+      - tool_verilator ? (prepare_dirs)
+      post_run:
+      - tool_verilator ? (copy_waves)
+    parameters_append:
+    - boot_mode
+    - firmware
+    - tool_verilator ? (log_level)
+    - max_cycles
+    - trace
+    - vcd_mode
+    - tool_verilator ? (no_err)
+    - RTL_SIMULATION=true
+    - VERILATOR_VERSION
+    tools:
+      modelsim:
+        vlog_options:
+        - -override_timescale 1ns/1ps
+        - -suppress vlog-2577
+        - -suppress vlog-2583
+        - -pedanticerrors
+        - -define MODELSIM
+        vsim_options:
+        - -suppress 3111 # suppress error on passing string variables to $fdumpvars, that is apparently supported instead
+        - -sv_lib ../../sw/sim/uartdpi
+        - -voptargs=+acc=npr
+        - "-64"
+      verilator:
+        mode: cc
+        verilator_options:
+        - '--cc'
+        - '--assert'
+        - '--trace'
+        - '--trace-fst'
+        - '--trace-structs'
+        - '--trace-max-array 128'
+        - '--x-assign unique'
+        - '--x-initial unique'
+        #- '--threads 2' # only use with Verilator v5.XXX
+        - '--exe'
+        - 'crheepto_tb.cpp'
+        - '-Wall'
+        - '-Wpedantic'
+        - '-LDFLAGS "-pthread -lutil -lelf"'
+        # - '-CFLAGS "-Wall -g"'
+
+  sim_rtl_xxxlib: &sim_rtl_xxxlib
+    <<: *default
+    description: Simulate the design using Verilator
+    filesets_append:
+    - tb-system
+    - tb-system-vendor
+    - pre_build_uartdpi
+    - tb-others
+    - tb-others-vendor
+    - rtl-xxxlib
+    toplevel:
+    - tb_top
+    hooks:
+      pre_build:
+      - pre_build_uartdpi
+      - pre_patch_modelsim_Makefile
+    parameters_append:
+    - boot_mode
+    - firmware
+    - max_cycles
+    - trace
+    - vcd_mode
+    - SYNTHESIS
+    tools:
+      modelsim:
+        vlog_options:
+        - -override_timescale 1ns/1ps
+        - -suppress vlog-2577
+        - -suppress vlog-2583
+        - -pedanticerrors
+        - -define MODELSIM
+        - +notimingcheck
+        - +nospecify
+        vsim_options:
+        - -suppress 3111 # suppress error on passing string variables to $fdumpvars, that is apparently supported instead
+        - -sv_lib ../../sw/sim/uartdpi
+        - -voptargs=+acc=npr
+        - "-64"
+
+# post synthesis simulation
+  sim_postsynthesis:
+    default_tool: modelsim
+    filesets_append:
+    - rtl-xxxlib
+    - postsynthesis-netlist
+    - tb-others
+    - tb-others-vendor
+    - tb-system
+    - tb-system-vendor
+    parameters_append:
+    - boot_mode
+    - firmware
+    - max_cycles
+    - verbose
+    - vcd_mode
+    - PRIM_DEFAULT_IMPL=prim_pkg::xxxlib
+    - UNIT_DELAY=0
+    - no_warning=true
+    - SYNTHESIS=true
+    toplevel:
+    - tb_top
+    hooks:
+      pre_build:
+      - pre_build_uartdpi
+      - pre_patch_modelsim_Makefile
+    tools:
+      modelsim:
+        vlog_options:
+        - -override_timescale 1ns/1ps
+        - -suppress vlog-2583
+        - -suppress vlog-2577
+        - -pedanticerrors
+        - -define MODELSIM
+        - +notimingcheck
+        - +nospecify
+        vsim_options:
+        - -suppress 3111 # suppress error on passing string variables to $fdumpvars, that is apparently supported instead
+        - -do "set StdArithNoWarnings 1; set NumericStdNoWarnings 1"  # Suppress warnings from coprosit and FLL
+        - -sv_lib ../../sw/sim/uartdpi
+        - -voptargs=+acc=npr
+        - +bus_conflict_off
+
+# post PnR simulation with no timing
+  sim_postlayout:
+    default_tool: modelsim
+    filesets_append:
+    - rtl-xxxlib
+    - postlayout-netlist
+    - tb-others
+    - tb-others-vendor
+    - tb-system
+    - tb-system-vendor
+    parameters_append:
+    - boot_mode
+    - firmware
+    - max_cycles
+    - verbose
+    - vcd_mode
+    - PRIM_DEFAULT_IMPL=prim_pkg::xxxlib
+    - UNIT_DELAY=0
+    - no_warning=true
+    - SYNTHESIS=true
+    - USE_PG_PIN=true
+    - POSTLAYOUT=true
+    toplevel:
+    - tb_top
+    hooks:
+      pre_build:
+      - pre_build_uartdpi
+      - pre_patch_modelsim_Makefile
+    tools:
+      modelsim:
+        vlog_options:
+        - -override_timescale 1ns/1ps
+        - -suppress vlog-2583
+        - -suppress vlog-2577
+        - -pedanticerrors
+        - -define MODELSIM
+        - +notimingcheck
+        - +nospecify
+        vsim_options:
+        - -suppress 3111 # suppress error on passing string variables to $fdumpvars, that is apparently supported instead
+        - -do "set StdArithNoWarnings 1; set NumericStdNoWarnings 1"  # Suppress warnings from coprosit and FLL
+        - -sv_lib ../../sw/sim/uartdpi
+        - -voptargs=+acc=npr
+        - +bus_conflict_off
+
+# Post-layout simulation with timing
+  sim_postlayout_timing:
+    default_tool: modelsim
+    filesets_append:
+    - tb-others
+    - tb-others-vendor
+    - tb-system
+    - tb-system-vendor
+    - rtl-xxxlib
+    - postlayout-netlist
+    parameters_append:
+    - boot_mode
+    - firmware
+    - max_cycles
+    - verbose
+    - vcd_mode
+    - PRIM_DEFAULT_IMPL=prim_pkg::tsmc16
+    - UNIT_DELAY=0
+    - no_warning=true
+    - SYNTHESIS=true
+    - USE_PG_PIN=true
+    - POSTLAYOUT=true
+    toplevel:
+    - tb_top
+    hooks:
+      pre_build:
+      - pre_build_uartdpi
+      - pre_patch_modelsim_Makefile
+      - pre_build_modelsim_scripts_postlayout
+    tools:
+      modelsim:
+        vlog_options:
+        - -override_timescale 1ns/1ps
+        - -suppress vlog-2583
+        - -suppress vlog-2577
+        - -pedanticerrors
+        - -define MODELSIM
+        - -define POWER_PINS
+        - -define LOAD_SDF
+        - -define NTC
+        - -define RECREM
+        vsim_options:
+        - -suppress 3111 # suppress error on passing string variables to $fdumpvars, that is apparently supported instead
+        - -sv_lib ../../sw/sim/uartdpi
+        - -voptargs=+acc=npr
+        - +bus_conflict_off
+        - -sdfnoerror
+        - -sdfannotatepercentage
+
+  # Format with Verible
+  format:
+    filesets:
+    - rtl-format
+    toplevel: crheepto_top
+    description: Format source files using verible-verilog-format
+    default_tool: veribleformat
+    tools:
+      veribleformat:
+        verible_format_args:
+        - '--assignment_statement_alignment=align'
+        - '--case_items_alignment=align'
+        - '--formal_parameters_indentation=indent'
+        - '--named_parameter_alignment=align'
+        - '--named_parameter_indentation=indent'
+        - '--named_port_alignment=align'
+        - '--named_port_indentation=indent'
+        - '--port_declarations_alignment=align'
+        - '--port_declarations_indentation=indent'
+        - '--assignment_statement_alignment=align'
+        - '--module_net_variable_alignment=align'
+        - '--inplace'
+
+  # Static analysis
+  lint:
+    filesets:
+    - rtl-format
+    toplevel: crheepto_top
+    description: Perform static analysis using Verible
+    default_tool: veriblelint
+    tools:
+      veriblelint:
+        ruleset: default
+        rules:
+        - 'line-length=length:200'
+
+  # zcu104 FPGA synthesis
+  zcu104:
+    <<: *default
+    default_tool: vivado
+    description: ZCU104 Evaluation Board
+    filesets_append:
+    - rtl-fpga
+    parameters:
+    - FPGA_SYNTH=true
+    - FPGA_ZCU104=true
+    tools:
+      vivado:
+        part: xczu7ev-ffvc1156-2-e
+        board_part: xilinx.com:zcu104:part0:1.0
+        # need to be updated with correct path
+        board_repo_paths: [../../../hw/vendor/x-heep/hw/fpga/board_files/vendor/esl_epfl_zcu104_board_files] 
+    toplevel: [xilinx_crheepto_wrapper]
+
+  # pynq-z2 FPGA synthesis
+  pynq-z2:
+    <<: *default
+    default_tool: vivado
+    description: TUL Pynq-Z2 Board
+    filesets_append:
+    - rtl-fpga
+    parameters:
+    - FPGA_SYNTH=true
+    tools:
+      vivado:
+        part: xc7z020clg400-1
+        board_part: tul.com.tw:pynq-z2:part0:1.0
+        board_repo_paths: [../../../hw/vendor/x-heep/hw/fpga/board_files/vendor/esl_epfl_pynq_z2_board_files]
+    toplevel: [xilinx_crheepto_wrapper]
+
+# Parameters
+parameters:
+  trace:
+    datatype: str
+    description: If 'true', generate simulation waves dump.
+    default: "true"
+    paramtype: cmdlinearg
+  no_err:
+    datatype: bool
+    description: Always exit with 0. Useful to run post-simulation hooks.
+    default: "true"
+    paramtype: cmdlinearg
+  firmware:
+    datatype: str
+    description: Firmware (in HEX format) to load into the system SRAM.
+    paramtype: plusarg
+  verbose:
+    datatype: bool
+    description: Verbosity mode for QuestaSim testbench.
+    paramtype: plusarg
+  log_level:
+    datatype: str
+    description: |
+      TB log level
+    default: LOG_NORMAL
+    paramtype: plusarg
+  boot_mode:
+    datatype: str
+    description: |
+      Boot mode for QuestaSim testbench. Admitted values: jtag|flash|force.
+    default: 2
+    paramtype: plusarg
+  vcd_mode:
+    datatype: int
+    description: "VCD dump mode: 0 (no dump) | 1 (always active) | 2 (triggered by GPIO 0)"
+    default: 0
+    paramtype: plusarg
+  max_cycles:
+    datatype: int
+    description: Maximum number of simulation cycles (halt the simulation when reached).
+    paramtype: plusarg
+  RTL_SIMULATION:
+    datatype: bool
+    paramtype: vlogdefine
+    description: |
+      Select code for RTL simulation (e.g., faster SRAM initialization)
+  UNIT_DELAY:
+    datatype: int
+    paramtype: vlogdefine
+    default: 0
+  no_warning:
+    datatype: bool
+    paramtype: vlogdefine
+    default: true
+  VERILATOR_VERSION:
+    datatype: int
+    paramtype: vlogdefine
+    default: 4
+  SYNTHESIS:
+    datatype: bool
+    paramtype: vlogdefine
+    description: |
+      Select code for synthesis (e.g., disable assertions)
+  PRIM_DEFAULT_IMPL:
+    datatype: str
+    paramtype: vlogdefine
+    default: prim_pkg::default
+    description: |
+      Default implementation for primitives. Set to `prim_pkg::xxxlib` for xxxlib primitives.
+  FPGA_SYNTH:
+    datatype: bool
+    paramtype: vlogdefine
+    default: false
+  FPGA_NEXYS:
+    datatype: bool
+    paramtype: vlogdefine
+    default: false
+  FPGA_ZCU104:
+    datatype: bool
+    paramtype: vlogdefine
+    default: false
+  POSTLAYOUT:
+    datatype: bool
+    paramtype: vlogdefine
+    description: |
+      Can isolate code that is (or is not) meant for post-layout simulation only
+  USE_PG_PIN:
+    datatype: bool
+    paramtype: vlogdefine
+    description: |
+      Provide supply to a netlist with PG pins meant for postlayout simulation only

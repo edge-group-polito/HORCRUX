@@ -1,0 +1,30 @@
+// Copyright 2022 EPFL and Politecnico di Torino.
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// File: heep-waivers.sv
+// Author: Michele Caon, Valeria Piscopo
+// Date: 09/01/2026
+// Description: Waivers for X-HEEP
+
+`verilator_config
+lint_off -rule UNOPTFLAT -file "*x-heep/hw/vendor/pulp_platform_riscv_dbg/src/dm_top.sv" -match "Signal unoptimizable: Feedback to clock or circular logic: '*.u_core_v_mini_mcu.debug_subsystem_i.dm_obi_top_i.i_dm_top.data_valid'"
+lint_off -rule UNOPTFLAT -file "*x-heep/hw/vendor/pulp_platform_riscv_dbg/src/dm_mem.sv" -match "Signal unoptimizable: Feedback to clock or circular logic: '*.u_core_v_mini_mcu.debug_subsystem_i.dm_obi_top_i.i_dm_top.*'"
+lint_off -rule UNOPTFLAT -file "*x-heep/hw/vendor/pulp_platform_register_interface/src/periph_to_reg.sv" -match "Signal unoptimizable: Feedback to clock or circular logic: '*.u_core_v_mini_mcu.peripheral_subsystem_i.*'"
+lint_off -rule UNOPTFLAT -file "*x-heep/hw/vendor/pulp_platform_register_interface/src/periph_to_reg.sv" -match "Signal unoptimizable: Feedback to clock or circular logic: '*.u_core_v_mini_mcu.ao_peripheral_subsystem_i.*'"
+lint_off -rule UNOPTFLAT -file "*x-heep/hw/core-v-mini-mcu/core_v_mini_mcu.sv" -match "Signal unoptimizable: Feedback to clock or circular logic: '*.u_core_v_mini_mcu.flash_mem_slave_resp'"
+lint_off -rule UNOPTFLAT -file "*x-heep/hw/core-v-mini-mcu/memory_subsystem.sv" -match "Signal unoptimizable: Feedback to clock or circular logic: '*.u_core_v_mini_mcu.__Vcellout__memory_subsystem_i__ram_resp_o'"
+lint_off -rule UNOPTFLAT -file "*pulp_platform_common_cells/src/cdc_reset_ctrlr.sv" -match "Signal unoptimizable: *_ack'"
+lint_off -rule UNOPTFLAT -file "*pulp_platform_riscv_dbg/src/dm_top.sv" -match "Signal unoptimizable: *ack'"
+lint_off -rule COMBDLY -file "*/*clock_gate*.sv"
+lint_off -rule COMBDLY -file "*/*clk_gate*.sv"
+lint_off -rule COMBDLY -file "*/tc_clk.sv"
+lint_off -rule DECLFILENAME -file "*/im2col_spc_reg_top.sv"
+lint_off -rule WIDTH -file "*/rtl/im2col_spc_reg_top.sv" -match "Operator ASSIGNW expects *"
+lint_off -rule UNUSED -file "*/rtl/im2col_spc.sv" -match "Signal is not used: 'data_out_rvalid'"
+lint_off -rule UNUSED -file "*/rtl/im2col_spc.sv" -match "Signal is not used: 'data_out_rdata'"
+lint_off -rule UNUSED -file "*/rtl/im2col_spc.sv" -match "Bits of signal are not used: *"
+lint_off -rule UNUSED -file "*/rtl/im2col_spc_param_fsm.sv" -match "Bits of signal are not used: *"
+lint_off -rule UNUSED -file "*/rtl/im2col_spc_regintfc_controller.sv" -match "Bits of signal are not used: *"
+lint_off -rule UNUSED -file "*/ao_peripheral_subsystem.sv" -match "*spc2ao_req_i*"
+lint_off -rule WIDTH -file "*x-heep/hw/core-v-mini-mcu/cpu_subsystem.sv" -match "Output port connection 'x_issue_req_o' *"
