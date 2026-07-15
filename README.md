@@ -16,7 +16,7 @@ Below are the links to the active branches representing our current versions:
 
 * **[Cup](https://github.com/vlsi-lab/HORCRUX/tree/cup)**
 * **[Diadem](https://github.com/vlsi-lab/HORCRUX/tree/diadem)**
-* **[Locket](tree/locket)**
+* **[Locket]([tree/locket](https://github.com/vlsi-lab/HORCRUX/tree/locket))**
 
 *(Future/Reserved branches include: Diary, Ring, Nagini, and Harry).*
 
