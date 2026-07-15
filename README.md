@@ -78,8 +78,7 @@ make questasim-sim
 ## 🔧 FPGA Set Up
 
 ```bash
-make vivado-fpga-synth FPGA_BOARD=<pynq-z2|zcu104>
-make vivado-fpga-pgm FPGA_BOARD=<pynq-z2|zcu104>
+make vivado-fpga-synth FPGA_BOARD=zcu104
 ```
 
 ## 🏗️ ASIC Synthesis
