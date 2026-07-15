@@ -1,5 +1,24 @@
 #!/usr/bin/env bash
 
+##########################################################################################
+#
+# Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+#               Valeria Piscopo    - valeria.piscopo@polito.it
+# Design Name:  Batch Application Simulator
+# Language:     Bash script
+# Date:         April 2026
+#
+# Description:  Builds and simulates many applications (RTL / post-synthesis / post-layout),
+#               auto-discovering apps or taking an explicit list, with pass/fail summary
+#               logging based on the TEST SUCCEEDED marker in each run log.
+#
+##########################################################################################
+
+
 # If not running under bash (e.g., invoked via sh), re-exec with bash to support bashisms (arrays, [[ ]], (( ))).
 if [ -z "${BASH_VERSION:-}" ]; then
 	exec /usr/bin/env bash "$0" "$@"

@@ -1,3 +1,19 @@
+//////////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab                                        //
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.                 //
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1                                     //
+//                                                                                      //
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it                      //
+//               Valeria Piscopo    - valeria.piscopo@polito.it                         //
+// Design Name:  Centered Binomial Distribution (CBD) Sampler                           //
+// Language:     SystemVerilog                                                          //
+// Date:         April 2026                                                             //
+//                                                                                      //
+// Description:  CBD sampling sub-unit for ML-KEM/ML-DSA secret and error polynomials.  //
+//               Extracts per-lane bit pairs from a 32-bit word and returns their signed //
+//               difference for eta in {1,2,3,4}. Instantiated by the sampler unit.     //
+//////////////////////////////////////////////////////////////////////////////////////////
+
 module cbd_eta (
     input  logic [31:0] d_i,    
     input  logic [31:0] j_i,    

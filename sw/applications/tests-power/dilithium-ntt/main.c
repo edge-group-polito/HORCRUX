@@ -1,10 +1,23 @@
-/**
- * @file main.c
- * @brief Dilithium NTT Test - Software vs Hardware Comparison
- * 
- * Tests the Number Theoretic Transform (NTT) operation for Dilithium
- * digital signature algorithm using both software and hardware implementations.
- */
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+//               Valeria Piscopo    - valeria.piscopo@polito.it
+// Design Name:  ML-DSA Forward NTT — Power Characterization
+// Language:     C
+// Date:         April 2026
+//
+// Description:  Power-characterization test for the ML-DSA (Dilithium) forward Number
+//               Theoretic Transform.
+//               Isolates the operation under a GPIO-triggered VCD dump window (see
+//               sw/applications/tests-power/README.md) for post-synthesis SW-vs-HW power
+//               comparison; SW_TEST_ENABLED selects the software reference or the
+//               HORCRUX-accelerated path.
+//
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stdint.h>
 #include <stdio.h>

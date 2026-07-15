@@ -1,4 +1,23 @@
 #!/usr/bin/env bash
+
+##########################################################################################
+#
+# Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+#               Valeria Piscopo    - valeria.piscopo@polito.it
+# Design Name:  Post-Synthesis Power Analysis Sweep
+# Language:     Bash script
+# Date:         April 2026
+#
+# Description:  Iterates over sw/applications/tests-power, building, simulating, and
+#               running power-analysis on each test for both the SW-baseline and
+#               HW-accelerated VCD windows (waves-0.vcd / waves-1.vcd).
+#
+##########################################################################################
+
 # get_power_res_postsynth
 # Iterate over subfolders in sw/applications/tests-power and for each test:
 #   1) make app-tests-power-<test_name>

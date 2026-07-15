@@ -1,12 +1,23 @@
-/*
- * Standalone test for OP_THASH2 instruction
- * 
- * Tests both SW reference and HW-accelerated implementations,
- * compares outputs and measures cycle counts.
- * 
- * OP_THASH2 is used for Merkle tree internal node hashing:
- *   parent = thash(left_child || right_child)
- */
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+//               Valeria Piscopo    - valeria.piscopo@polito.it
+// Design Name:  SLH-DSA THASH2 — Power Characterization
+// Language:     C
+// Date:         April 2026
+//
+// Description:  Power-characterization test for the SLH-DSA tweakable hash on a 2-block
+//               input (THASH2).
+//               Isolates the operation under a GPIO-triggered VCD dump window (see
+//               sw/applications/tests-power/README.md) for post-synthesis SW-vs-HW power
+//               comparison; SW_TEST_ENABLED selects the software reference or the
+//               HORCRUX-accelerated path.
+//
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
 #include <stdint.h>

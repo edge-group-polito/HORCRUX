@@ -1,3 +1,24 @@
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+//               Valeria Piscopo    - valeria.piscopo@polito.it
+// Design Name:  WOTS+ Chain Lengths — Power Characterization
+// Language:     C
+// Date:         April 2026
+//
+// Description:  Power-characterization test for SLH-DSA WOTS+ base-w chain-length and
+//               checksum computation.
+//               Isolates the operation under a GPIO-triggered VCD dump window (see
+//               sw/applications/tests-power/README.md) for post-synthesis SW-vs-HW power
+//               comparison; SW_TEST_ENABLED selects the software reference or the
+//               HORCRUX-accelerated path.
+//
+//////////////////////////////////////////////////////////////////////////////////////////
+
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>

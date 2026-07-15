@@ -1,5 +1,23 @@
 #!/bin/bash
 
+##########################################################################################
+#
+# Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+#               Valeria Piscopo    - valeria.piscopo@polito.it
+# Design Name:  Post-Synthesis Log Checker
+# Language:     Bash script
+# Date:         April 2026
+#
+# Description:  Scans synth.log for synthesis errors and inferred latches, and
+#               timing_loop.rpt for combinational timing loops after ASIC synthesis.
+#
+##########################################################################################
+
+
 # Relative paths
 REL_LOG="implementation/synthesis/last_output/report/synth.log"
 REL_TIMING="implementation/synthesis/last_output/report/timing_loop.rpt"

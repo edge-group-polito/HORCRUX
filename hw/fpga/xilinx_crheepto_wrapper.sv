@@ -2,6 +2,22 @@
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 
+//////////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab                                        //
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.                 //
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1                                     //
+//                                                                                      //
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it                      //
+//               Valeria Piscopo    - valeria.piscopo@polito.it                         //
+// Design Name:  Xilinx crheepto FPGA Top Wrapper (HORCRUX additions)                   //
+// Language:     SystemVerilog                                                          //
+// Date:         April 2026                                                             //
+//                                                                                      //
+// Description:  HORCRUX adaptation of the EPFL wrapper above: adds board-specific clocking //
+//               and pad handling to instantiate the HORCRUX coprocessor alongside the  //
+//               X-HEEP MCU on the Xilinx FPGA targets.                                 //
+//////////////////////////////////////////////////////////////////////////////////////////
+
 module xilinx_crheepto_wrapper
   import obi_pkg::*;
   import reg_pkg::*;

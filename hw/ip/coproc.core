@@ -1,11 +1,22 @@
 CAPI=2:
 
-# Copyright 2026 POLITO
+##########################################################################################
+#
+# Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
 # Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 # SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+#               Valeria Piscopo    - valeria.piscopo@polito.it
+# Design Name:  HORCRUX Coprocessor FuseSoC Core
+# Language:     FuseSoC Core (YAML)
+# Date:         April 2026
+#
+# Description:  FuseSoC core file listing the RTL filesets and dependencies for the HORCRUX
+#               coprocessor (hw/ip/coprocessors/) integrated into the crheepto SoC.
+#
+##########################################################################################
 
-# Authors: Valeria Piscopo - valeria.piscopo@polito.it
-#          Alessandra Dolmeta - alessandra.dolmeta@polito.it 
 name: polito:crheepto:coproc
 description: crheepto coprocessors
 

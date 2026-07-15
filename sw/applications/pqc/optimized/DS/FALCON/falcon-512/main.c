@@ -1,12 +1,21 @@
-/////////////////////////////////////////////////////////////////////////////////////
-//                                                                                 //
-// Auth: Alessandra Dolmeta, Valeria Piscopo - Politecnico di Torino               //
-// Date: September 2024                                                            //
-// Desc: Entry point for testing the FALCON implementation using input and output  //
-//       test vector coming from NIST                                              //
-//                                                                                 //
-/////////////////////////////////////////////////////////////////////////////////////
-
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+//               Valeria Piscopo    - valeria.piscopo@polito.it
+// Design Name:  Falcon-512 KAT Test — HORCRUX-Optimized
+// Language:     C
+// Date:         April 2026
+//
+// Description:  Self-contained KAT test for Falcon key generation, signing, and
+//               verification, adapted from the official NIST reference implementation.
+//               This variant enables the HORCRUX custom ISA (hw/ip/coprocessors/) for
+//               the accelerated hot-path operations.
+//
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stddef.h>
 #include <stdint.h>

@@ -1,4 +1,22 @@
 #!/usr/bin/env python3
+
+##########################################################################################
+#
+# Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+#               Valeria Piscopo    - valeria.piscopo@polito.it
+# Design Name:  Batch Power Scope Extractor
+# Language:     Python 3 script
+# Date:         April 2026
+#
+# Description:  Runs extract_power_scopes.py across every reports_* subfolder produced by
+#               get_power_res_postsynth.sh, trimming all tests' power reports in one pass.
+#
+##########################################################################################
+
 """
 Run scripts/extract_power_scopes.py across multiple subfolders.
 """

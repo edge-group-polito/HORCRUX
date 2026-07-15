@@ -6,14 +6,14 @@
 //
 // Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
 //               Valeria Piscopo    - valeria.piscopo@polito.it
-// Design Name:  HQC-1 KAT Test — Baseline
+// Design Name:  HQC-1 KAT Test — HORCRUX-Optimized
 // Language:     C
 // Date:         April 2026
 //
 // Description:  Self-contained KAT test for HQC key generation, encapsulation, and
 //               decapsulation, adapted from the official NIST reference implementation.
-//               This is the pure software baseline: no HORCRUX hardware acceleration is
-//               used.
+//               This variant enables the HORCRUX custom ISA (hw/ip/coprocessors/) for
+//               the accelerated hot-path operations.
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -27,6 +27,7 @@
 
 #include "core_v_mini_mcu.h"
 #include "csr.h"
+
 
 #define TEST_KEY        1
 #define TEST_ENC        1
@@ -49,15 +50,15 @@ int main(void)
     uint8_t sk[CRYPTO_SECRETKEYBYTES];
     uint8_t ct[CRYPTO_CIPHERTEXTBYTES] = {0};
     uint8_t ss[CRYPTO_BYTES] = {0};
-    uint8_t ss1[CRYPTO_BYTES] = {0};    
-
-            
+    uint8_t ss1[CRYPTO_BYTES] = {0};
+    
     unsigned cycles_keygen, cycles_sign, cycles_sign_open;
 
     CSR_CLEAR_BITS(CSR_REG_MCOUNTINHIBIT, 0x1);
     CSR_WRITE(CSR_REG_MCYCLE, 0);
 
-    printf("Started test.\n");
+
+    //printf("Started test.\n");
     memset(pk, 0, CRYPTO_PUBLICKEYBYTES);
     memset(sk, 0, CRYPTO_SECRETKEYBYTES);
 
@@ -81,7 +82,7 @@ int main(void)
     // KEY
     //*************************************************
     #ifdef TEST_KEY
-
+        
         CSR_WRITE(CSR_REG_MCYCLE, 0);
         //Alice generates a public key
         crypto_kem_keypair(pk, sk);
@@ -101,6 +102,7 @@ int main(void)
     // ENCAPSULATION
     //*************************************************     
     #ifdef TEST_ENC
+
          
         #ifndef TEST_KEY
             memcpy(pk, TVEC_OUT_PK, CRYPTO_PUBLICKEYBYTES);
@@ -135,7 +137,7 @@ int main(void)
         CSR_WRITE(CSR_REG_MCYCLE, 0);
 
         crypto_kem_dec(ss1, ct, sk);
-
+        
         CSR_READ(CSR_REG_MCYCLE, &cycles_sign_open);
         printf("Decaps cycles: %u\n", cycles_sign_open);
 
@@ -147,8 +149,8 @@ int main(void)
             printVect("pk", pk, CRYPTO_PUBLICKEYBYTES);
             printVect("sk", sk, CRYPTO_SECRETKEYBYTES);
             printVect("ct", ct, CRYPTO_CIPHERTEXTBYTES);
-            printVect("key_a", key_a, CRYPTO_BYTES);
-            printVect("key_b", key_b, CRYPTO_BYTES);
+            printVect("key_a", ss, CRYPTO_BYTES);
+            printVect("key_b", ss1, CRYPTO_BYTES);
             printf("\n");
     #endif 
 

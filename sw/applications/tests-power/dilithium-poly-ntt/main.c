@@ -1,11 +1,23 @@
-/**
- * @file main.c
- * @brief Dilithium Polyvec NTT Test - Software vs Hardware Comparison
- *
- * Generates a deterministic DSA_K-polynomial polyvector, runs the forward NTT
- * via the SW golden model and the HW implementation, then checks that both
- * produce identical output.
- */
+//////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+//               Valeria Piscopo    - valeria.piscopo@polito.it
+// Design Name:  ML-DSA Polyvec Forward NTT — Power Characterization
+// Language:     C
+// Date:         April 2026
+//
+// Description:  Power-characterization test for the ML-DSA forward NTT over a K=4
+//               polynomial vector.
+//               Isolates the operation under a GPIO-triggered VCD dump window (see
+//               sw/applications/tests-power/README.md) for post-synthesis SW-vs-HW power
+//               comparison; SW_TEST_ENABLED selects the software reference or the
+//               HORCRUX-accelerated path.
+//
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stdint.h>
 #include <stdio.h>

@@ -1,15 +1,22 @@
-///////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2025 PoliTO - @VLSI Lab
+// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 //
-// Auth: Alessandra Dolmeta, Valeria Piscopo
-// Email: alessandra.dolmeta@polito.it, valeria.piscopo@polito.it
-// Affiliation: Politecnico di Torino - @VLSI Lab
-// Date: October 2025
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+//               Valeria Piscopo    - valeria.piscopo@polito.it
+// Design Name:  SLH-DSA-192f-simple KAT Test — Baseline
+// Language:     C
+// Date:         April 2026
 //
-///////////////////////////////////////////////////////////////////////////////////
+// Description:  Self-contained KAT test for SLH-DSA (SPHINCS+) key generation, signing,
+//               and verification, adapted from the official NIST reference
+//               implementation.
+//               This is the pure software baseline: no HORCRUX hardware acceleration is
+//               used.
+//
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,4 +1,23 @@
 #!/usr/bin/env bash
+
+##########################################################################################
+#
+# Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+#               Valeria Piscopo    - valeria.piscopo@polito.it
+# Design Name:  FPGA Batch App Compiler
+# Language:     Bash script
+# Date:         April 2026
+#
+# Description:  Builds a list of applications for the zcu104 FPGA target, optionally
+#               patching the TEST_KEY/TEST_SIGN/TEST_ENC/TEST_DEC macros in main.c,
+#               and copies the compiled output to sw/compiled_apps/sphincsbaseline/.
+#
+##########################################################################################
+
 # compile_apps_fpga.sh
 # Usage:
 #   ./compile_apps_fpga.sh [--no-modify|-n] <app_folder> <app_name1> [app_name2 ...]

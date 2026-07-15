@@ -1,3 +1,19 @@
+//////////////////////////////////////////////////////////////////////////////////////////
+// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab                                        //
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.                 //
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1                                     //
+//                                                                                      //
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it                      //
+//               Valeria Piscopo    - valeria.piscopo@polito.it                         //
+// Design Name:  Unified 32x32 Multiplier                                               //
+// Language:     SystemVerilog                                                          //
+// Date:         April 2026                                                             //
+//                                                                                      //
+// Description:  Dual-mode 32x32 multiplier, core of the Shared Multiplication Logic.   //
+//               Switches between carry-propagating integer multiplication (lattice     //
+//               schemes) and carry-free GF(2) accumulation (HQC) via carryless_mode_i. //
+//////////////////////////////////////////////////////////////////////////////////////////
+
 module unified_mul_32x32 (
     input  logic [31:0] a_i,
     input  logic [31:0] b_i,

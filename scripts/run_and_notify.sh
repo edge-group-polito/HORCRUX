@@ -1,4 +1,23 @@
 #!/usr/bin/env bash
+
+##########################################################################################
+#
+# Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+#               Valeria Piscopo    - valeria.piscopo@polito.it
+# Design Name:  ASIC Flow Orchestrator and Notifier
+# Language:     Bash script
+# Date:         April 2026
+#
+# Description:  Drives the rebuild / synthesis / post-synthesis-sim / PnR / post-layout-sim /
+#               dummy-fill flow behind ENABLE_* flags, watches the Innovus PnR log for stage
+#               progress, and pushes notifications to ntfy.sh/crheepto.
+#
+##########################################################################################
+
 set -euo pipefail
 
 # ---- Flow control flags ----

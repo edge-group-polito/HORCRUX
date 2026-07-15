@@ -1,16 +1,22 @@
-///////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2025 PoliTO - @VLSI Lab
+// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 //
-// Auth: Alessandra Dolmeta, Valeria Piscopo
-// Email: alessandra.dolmeta@polito.it, valeria.piscopo@polito.it
-// Affiliation: Politecnico di Torino - @VLSI Lab
-// Date: October 2025
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+//               Valeria Piscopo    - valeria.piscopo@polito.it
+// Design Name:  ML-KEM-768 KAT Test — HORCRUX-Optimized
+// Language:     C
+// Date:         April 2026
 //
-///////////////////////////////////////////////////////////////////////////////////
-
+// Description:  Self-contained KAT test for ML-KEM (Kyber) key generation,
+//               encapsulation, and decapsulation, adapted from the official NIST
+//               reference implementation.
+//               This variant enables the HORCRUX custom ISA (hw/ip/coprocessors/) for
+//               the accelerated hot-path operations.
+//
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stddef.h>
 #include <stdio.h>

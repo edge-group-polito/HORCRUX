@@ -6,14 +6,14 @@
 //
 // Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
 //               Valeria Piscopo    - valeria.piscopo@polito.it
-// Design Name:  HQC-1 KAT Test — Baseline
+// Design Name:  HQC-3 KAT Test — HORCRUX-Optimized
 // Language:     C
 // Date:         April 2026
 //
 // Description:  Self-contained KAT test for HQC key generation, encapsulation, and
 //               decapsulation, adapted from the official NIST reference implementation.
-//               This is the pure software baseline: no HORCRUX hardware acceleration is
-//               used.
+//               This variant enables the HORCRUX custom ISA (hw/ip/coprocessors/) for
+//               the accelerated hot-path operations.
 //
 //////////////////////////////////////////////////////////////////////////////////////////
 
@@ -23,7 +23,7 @@
 #include <string.h>
 #include "api.h"
 #include "symmetric.h"
-#include "test_vectors_1.h"
+#include "test_vectors_3.h"
 
 #include "core_v_mini_mcu.h"
 #include "csr.h"
@@ -51,11 +51,9 @@ int main(void)
     uint8_t ss[CRYPTO_BYTES] = {0};
     uint8_t ss1[CRYPTO_BYTES] = {0};    
 
-            
-    unsigned cycles_keygen, cycles_sign, cycles_sign_open;
+    unsigned cycles_keygen, cycles_encaps, cycles_decaps;
 
     CSR_CLEAR_BITS(CSR_REG_MCOUNTINHIBIT, 0x1);
-    CSR_WRITE(CSR_REG_MCYCLE, 0);
 
     printf("Started test.\n");
     memset(pk, 0, CRYPTO_PUBLICKEYBYTES);
@@ -83,6 +81,7 @@ int main(void)
     #ifdef TEST_KEY
 
         CSR_WRITE(CSR_REG_MCYCLE, 0);
+
         //Alice generates a public key
         crypto_kem_keypair(pk, sk);
 
@@ -110,8 +109,8 @@ int main(void)
 
         crypto_kem_enc(ct, ss, pk);
 
-        CSR_READ(CSR_REG_MCYCLE, &cycles_sign);
-        printf("Encaps cycles: %u\n", cycles_sign);
+        CSR_READ(CSR_REG_MCYCLE, &cycles_encaps);
+        printf("Encaps cycles: %u\n", cycles_encaps);
 
         if(memcmp(ct, TVEC_OUT_CT, CRYPTO_CIPHERTEXTBYTES)) { printf("ERROR: CT mismatch\n");}
         if(memcmp(ss, TVEC_OUT_SS, CRYPTO_BYTES)) { printf("ERROR: SS mismatch\n");}
@@ -136,8 +135,8 @@ int main(void)
 
         crypto_kem_dec(ss1, ct, sk);
 
-        CSR_READ(CSR_REG_MCYCLE, &cycles_sign_open);
-        printf("Decaps cycles: %u\n", cycles_sign_open);
+        CSR_READ(CSR_REG_MCYCLE, &cycles_decaps);
+        printf("Decaps cycles: %u\n", cycles_decaps);
 
         if(memcmp(ss1, TVEC_OUT_SS, CRYPTO_BYTES)) { printf("ERROR: SS mismatch\n");}
         //printVect("key_b", ss1, CRYPTO_BYTES);
