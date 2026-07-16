@@ -32,10 +32,10 @@ If you use or build upon the work in these branches, please cite the correspondi
 Alessandra Dolmeta, Valeria Piscopo, Guido Masera, Maurizio Martina, and Michael Hutter. "HORCRUX - A Lightweight PQC-RISC-V eXtension Architecture." *Cryptology ePrint Archive, Paper 2025/1934* (2025). Available at: https://eprint.iacr.org/2025/1934
 
 **For the `diadem` branch:**
-Valeria Piscopo, Alessandra Dolmeta, Maurizio Martina, Guido Masera, and Michael Hutter. "Raise the Shields: A Modular RISC-V Extension for Post Quantum Cryptography." *In 63rd ACM/IEEE Design Automation Conference (DAC ’26)*, July 26–29, 2026, Long Beach, CA, USA. ACM, New York, NY, USA, 7 pages. https://doi.org/10.1145/3770743.3804373
+Alessandra Dolmeta, Valeria Piscopo, Maurizio Martina, Guido Masera, and Michael Hutter. "Raise the Shields: A Modular RISC-V Extension for Post Quantum Cryptography." *In 63rd ACM/IEEE Design Automation Conference (DAC ’26)*, July 26–29, 2026, Long Beach, CA, USA. ACM, New York, NY, USA, 7 pages. https://doi.org/10.1145/3770743.3804373
 
 **For the `locket` branch:**
-TO BE DEFINED
+Alessandra Dolmeta, Valeria Piscopo, Maurizio Martina, Guido Masera, and Michael Hutter, "HORCRUX: A Complete PQC RISC-V eXtension Architecture", https://doi.org/10.48550/arXiv.2607.13939
 
 ---
 
