@@ -1,12 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2025 PoliTO - @VLSI Lab
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 //
 // Auth: Alessandra Dolmeta, Valeria Piscopo
 // Email: alessandra.dolmeta@polito.it, valeria.piscopo@polito.it
-// Affiliation: Politecnico di Torino - @VLSI Lab
+// Affiliation: EDGE Group, @VLSI Lab - Politecnico di Torino
 // Date: April 2026
 //
 // Description: Test for OP_UNPACK_Z - ML-DSA gamma1-range coefficient unpacking

@@ -1,6 +1,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 //
-// Auth: Alessandra Dolmeta - Politecnico di Torino
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+//               Valeria Piscopo    - valeria.piscopo@polito.it
 // Date: June 2024
 // Desc: Test vector generated with the PQCgenKAT.c program in the Dilithium
 //       reference implementation: https://github.com/pq-crystals/Dilithium/tree/main

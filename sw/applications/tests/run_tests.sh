@@ -1,4 +1,20 @@
 #!/bin/bash
+##########################################################################################
+#
+# Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+#               Valeria Piscopo    - valeria.piscopo@polito.it
+# Design Name:  Instruction Test Runner
+# Language:     Bash script
+# Date:         April 2026
+#
+# Description:  Builds and runs the per-instruction HW/SW correctness tests for the HORCRUX
+#               coprocessor units. See sw/applications/tests/README.md for the test list.
+#
+##########################################################################################
 #
 # run_tests.sh - Hardware Accelerator Test Runner
 #

@@ -1,8 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2025 PoliTO - @VLSI Lab
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// Auth: Alessandra Dolmeta, Valeria Piscopo
+// Email: alessandra.dolmeta@polito.it, valeria.piscopo@polito.it
+// Affiliation: EDGE Group, @VLSI Lab - Politecnico di Torino
 //
 // HQC Barrett reduction test (SW + HW)
 //

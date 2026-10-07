@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 //
@@ -81,7 +81,7 @@ int main(void)
     //************************************************* 
     // KEY
     //*************************************************
-    #ifdef TEST_KEY
+    #if TEST_KEY == 1
         
         CSR_WRITE(CSR_REG_MCYCLE, 0);
         //Alice generates a public key
@@ -101,10 +101,10 @@ int main(void)
     //************************************************* 
     // ENCAPSULATION
     //*************************************************     
-    #ifdef TEST_ENC
+    #if TEST_ENC == 1
 
          
-        #ifndef TEST_KEY
+        #if TEST_KEY == 0
             memcpy(pk, TVEC_OUT_PK, CRYPTO_PUBLICKEYBYTES);
         #endif  
 
@@ -126,12 +126,12 @@ int main(void)
     // DECAPSULATION
     //*************************************************
 
-    #ifdef TEST_DEC
-        #ifndef TEST_KEY
-            memcpy(sk, TVEC_OUT_SK[0], CRYPTO_SECRETKEYBYTES);
+    #if TEST_DEC == 1
+        #if TEST_KEY == 0
+            memcpy(sk, TVEC_OUT_SK, CRYPTO_SECRETKEYBYTES);
         #endif 
-        #ifndef TEST_ENC
-            memcpy(ct, TVEC_OUT_CT[0], CRYPTO_CIPHERTEXTBYTES);
+        #if TEST_ENC == 0
+            memcpy(ct, TVEC_OUT_CT, CRYPTO_CIPHERTEXTBYTES);
         #endif 
 
         CSR_WRITE(CSR_REG_MCYCLE, 0);

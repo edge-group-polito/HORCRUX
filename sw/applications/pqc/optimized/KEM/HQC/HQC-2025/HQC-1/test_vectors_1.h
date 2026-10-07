@@ -1,9 +1,14 @@
 ///////////////////////////////////////////////////////////////////////////////////////
-//                                                                                   //
-// Auth: Alessandra Dolmeta, Valeria Piscopo - Politecnico di Torino                 //
-// Date: September 2025                                                              //
-// Desc: KAT-TEST                                                                    //
-//                                                                                   //
+//
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+//               Valeria Piscopo    - valeria.piscopo@polito.it
+// Date: September 2025
+// Desc: KAT-TEST
+//
 ///////////////////////////////////////////////////////////////////////////////////////
 
 #ifndef __TEST_VECTORS_1_H__

@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////////////////
-// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab                                       //
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino                        //
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.                //
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1                                    //
 //                                                                                      //
@@ -30,15 +30,47 @@ module multiplier_tree (
     // Internal registers for HQC Karatsuba
     logic [31:0] a1_reg, b1_reg;  // Store a_hi, b_hi from KARATS_2
     logic [31:0] reg_A, reg_B;    // Accumulator registers for intermediate XOR results
-    
+
     // Internal wires
     logic [31:0] mul_op_a, mul_op_b, mul_res_lo, mul_res_hi;
     logic [2:0]  mul_mode;
     logic [31:0] modp_p0i;
 
+    // pipe_en: HIGH for instructions that go through the full 3-multiply
+    // Montgomery chain (primary × QINV × Q). These take 2 execute cycles.
+    // Karatsuba (carryless), RED32, GF paths stay single-cycle.
+    // Barrett (OP_BARRETT/OP_BARRETT_HQC*) is also 2-cycle, but pipelined
+    // internally inside the barrett submodule, independent of this signal.
+    logic pipe_en;
+    always_comb begin
+        pipe_en = 1'b0;
+        case (insn_i)
+            OP_BFNTTD, OP_BFINTTD,
+            OP_BFNTTK, OP_BFINTTK,
+            OP_BFNTTF, OP_BFINTTF,
+            OP_MQMULD, OP_MQMULK, OP_MQMULF,
+            OP_MODP_MONTYMUL: pipe_en = 1'b1;
+            default:          pipe_en = 1'b0;
+        endcase
+    end
+
     // Barrett reduction for Kyber INTT
     logic [31:0] barrett_input;
     logic [31:0] barrett_result;
+
+    // Pipeline registers for parallel paths
+    logic [31:0] rs1_q;
+    logic [31:0] rs2_q;
+
+    always_ff @(posedge clk_i or negedge rst_ni) begin
+        if (!rst_ni) begin
+            rs1_q            <= '0;
+            rs2_q            <= '0;
+        end else begin
+            rs1_q            <= multiplier_tree1_i;
+            rs2_q            <= multiplier_tree2_i;
+        end
+    end
     
     // GF reduce - full reduction mod 0x11D in one cycle
     logic [31:0] gf_reduce_result;
@@ -169,6 +201,8 @@ module multiplier_tree (
     assign modp_p0i = modp_p0i_lookup(multiplier_tree3_i);
 
     barrett kyber_barrett_inst (
+        .clk_i(clk_i),
+        .rst_ni(rst_ni),
         .a(barrett_input),
         .b(multiplier_tree2_i),
         .insn_i(insn_i),
@@ -200,13 +234,16 @@ module multiplier_tree (
     assign compare_u32_result = 32'd1 ^ {31'b0, (cmp_v1_minus_v2 | cmp_v2_minus_v1) >> 31};
 
     shared_multiplication_logic u_shared_mul (
-        .op_a_i(mul_op_a),
-        .op_b_i(mul_op_b),
-        .modp_p_i(multiplier_tree3_i),
-        .modp_p0i_i(modp_p0i),
-        .mode_i(mul_mode),
-        .res_lo_o(mul_res_lo),
-        .res_hi_o(mul_res_hi)
+        .clk_i      (clk_i),
+        .rst_ni     (rst_ni),
+        .pipe_en_i  (pipe_en),
+        .op_a_i     (mul_op_a),
+        .op_b_i     (mul_op_b),
+        .modp_p_i   (multiplier_tree3_i),
+        .modp_p0i_i (modp_p0i),
+        .mode_i     (mul_mode),
+        .res_lo_o   (mul_res_lo),
+        .res_hi_o   (mul_res_hi)
     );
 
 
@@ -259,7 +296,7 @@ module multiplier_tree (
 
         case (insn_i)
             OP_BFNTTK: begin
-                a = multiplier_tree1_i[15:0];
+                a = rs1_q[15:0];
                 t = mul_res_lo[15:0];
                 temp_result_a = a + t;
                 temp_result_b = a - t;
@@ -270,7 +307,7 @@ module multiplier_tree (
             end
             OP_BFNTTF: begin
                 // Falcon Forward NTT: a' = (a + t) mod q, b' = (a - t) mod q
-                a = multiplier_tree1_i[15:0];
+                a = rs1_q[15:0];
                 t = mul_res_lo[15:0];
                 
                 // Compute a + t - q (17-bit signed to detect underflow)
@@ -287,8 +324,8 @@ module multiplier_tree (
             end
             OP_BFINTTF: begin
                 // Falcon Inverse NTT: a' = (a + b) mod q, b' = (a - b) * zeta mod q
-                a = multiplier_tree1_i[15:0];
-                b = multiplier_tree2_i[15:0];
+                a = rs1_q[15:0];
+                b = rs2_q[15:0];
                 
                 // Compute a + b - q
                 falcon_a_plus_b = $signed({1'b0, a}) + $signed({1'b0, b}) - $signed(FALCON_Q);
@@ -296,21 +333,23 @@ module multiplier_tree (
                 
                 // b' comes from Montgomery multiplication (already reduced)
                 falcon_intt_res_b = mul_res_lo[15:0];
-                
                 result_o = {falcon_intt_res_b, falcon_intt_res_a};
             end
             OP_BARRETT, OP_BARRETT_HQC, OP_BARRETT_HQC3, OP_BARRETT_HQC5: begin
+                // barrett_result is now pipelined inside the barrett submodule (2 cycles):
+                // valid on the WAIT_PIPE commit cycle, same timing as mul_res_lo for
+                // Montgomery ops.
                 result_o = barrett_result;
             end
             OP_BFNTTD: begin
-                result_o    = multiplier_tree1_i + mul_res_lo;
-                result_hi_o = multiplier_tree1_i - mul_res_lo;
+                result_o    = rs1_q + mul_res_lo;
+                result_hi_o = rs1_q - mul_res_lo;
             end
             OP_BFNTTDH: begin
                 result_o = reg_A;
             end
             OP_BFINTTD: begin
-                result_o    = multiplier_tree1_i + multiplier_tree2_i;
+                result_o    = rs1_q + rs2_q;
                 result_hi_o = mul_res_lo; 
             end
             OP_BFINTTDH: begin

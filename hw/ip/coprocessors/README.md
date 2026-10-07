@@ -10,7 +10,7 @@ See the top-level [README](../../../README.md) for the overall system figure and
 | Module | Description |
 |---|---|
 | [`horcrux.sv`](horcrux.sv) | Top-level controller. Instantiates the decode, functional-unit, and commit stages and orchestrates instruction dispatch. |
-| [`id_stage.sv`](id_stage.sv) | Instruction decode stage. Parses the custom opcodes and routes operands (`rs1`, `rs2`, `rs3`) to the appropriate functional unit. |
+| [`id_stage.sv`](id_stage.sv) | Instruction decode stage. Parses the custom opcodes and routes operands (`rs1`, `rs2`, `rs3`) to the appropriate functional unit. Pipelined instructions (Montgomery and Barrett paths) take one extra cycle, held in a dedicated `WAIT_PIPE` state that keeps the operands stable while the pipeline register settles. |
 | [`commit_stage.sv`](commit_stage.sv) | Commit stage. Writes results back to the RISC-V core register file in program order. |
 | [`horcrux_top.sv`](horcrux_top.sv) | Interface wrapper that connects `horcrux.sv` to the X-HEEP SoC via CV-X-IF. |
 | [`coproc_wrapper.sv`](coproc_wrapper.sv) | Coprocessor wrapper instantiated inside the CPU subsystem. |
@@ -40,9 +40,9 @@ See the top-level [README](../../../README.md) for the overall system figure and
 | Module | Description |
 |---|---|
 | [`multiplier_tree.sv`](multiplier_tree.sv) | Unified datapath for NTT butterflies (ML-KEM/ML-DSA/Falcon) and Montgomery multiplication, built around the Shared Multiplication Logic. |
-| [`shared_multiplication_logic.sv`](shared_multiplication_logic.sv) | Core reduction skeleton: computes the universal Montgomery reduction for lattice schemes and routes to `unified_mul_32x32` for HQC's carry-less products. |
+| [`shared_multiplication_logic.sv`](shared_multiplication_logic.sv) | Core reduction skeleton: computes the universal Montgomery reduction for lattice schemes and routes to `unified_mul_32x32` for HQC's carry-less products. A pipeline register between the primary multiply and the reduction stages breaks the critical path through the multiplier tree. |
 | [`unified_mul_32x32.sv`](unified_mul_32x32.sv) | Dual-mode 32×32 multiplier: standard carry-propagating integer multiplication or carry-free `GF(2)` accumulation, selected by a single `carryless_mode_i` control signal. |
-| [`barrett.sv`](barrett.sv) | Barrett reduction unit shared between ML-KEM (mod 3329) and HQC (mod 17669/35851/57637), implemented with hardwired shifts and additions instead of a divider. |
+| [`barrett.sv`](barrett.sv) | Barrett reduction unit shared between ML-KEM (mod 3329) and HQC (mod 17669/35851/57637), implemented with hardwired shifts and additions instead of a divider. Split into two stages: the quotient estimate is registered, and the final reduction is computed from it on the next cycle. |
 
 ### Sampling
 | Module | Description |

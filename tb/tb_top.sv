@@ -370,4 +370,53 @@ module tb_top;
       .exit_valid_o        (exit_valid),
       .exit_value_o        (exit_value)
   );
+
+  // Out-of-bound access reporter
+  // ----------------------------
+  // system_bus.sv already $stops on an unmapped access, but it prints only the
+  // address, which is not enough to find the guilty instruction. This adds the
+  // program counter and the issuing master, so the fault can be mapped back to
+  // a function with:
+  //   riscv32-corev-elf-addr2line -f -e <main.elf> <pc_id>
+  //
+  // Note this reporter, like the check it mirrors, is simulation-only: on FPGA
+  // there is no bounds check at all and the same access silently reads garbage.
+`ifndef SYNTHESIS
+  // Aliases for the deep hierarchical paths.
+  wire        oob_req   = u_tb_system.u_crheepto_top.u_core_v_mini_mcu.system_bus_i.error_slave_req.req;
+  wire [31:0] oob_addr  = u_tb_system.u_crheepto_top.u_core_v_mini_mcu.system_bus_i.error_slave_req.addr;
+  wire        oob_we    = u_tb_system.u_crheepto_top.u_core_v_mini_mcu.system_bus_i.error_slave_req.we;
+  wire [ 3:0] oob_be    = u_tb_system.u_crheepto_top.u_core_v_mini_mcu.system_bus_i.error_slave_req.be;
+  wire [31:0] oob_wdata = u_tb_system.u_crheepto_top.u_core_v_mini_mcu.system_bus_i.error_slave_req.wdata;
+  wire [31:0] oob_pc    = u_tb_system.u_crheepto_top.u_core_v_mini_mcu.cpu_subsystem_i
+                            .gen_cv32e40px.cv32e40px_top_i.core_i.pc_id;
+  wire [31:0] oob_daddr = u_tb_system.u_crheepto_top.u_core_v_mini_mcu.cpu_subsystem_i.core_data_req_o.addr;
+  wire        oob_dreq  = u_tb_system.u_crheepto_top.u_core_v_mini_mcu.cpu_subsystem_i.core_data_req_o.req;
+  wire [31:0] oob_iaddr = u_tb_system.u_crheepto_top.u_core_v_mini_mcu.cpu_subsystem_i.core_instr_req_o.addr;
+
+  // Triggered on the rising edge of the request, i.e. strictly before the
+  // clocked $stop in system_bus.sv samples it, so these lines always appear.
+  //
+  // The 1 ns settle delay matters: the address decode glitches on every
+  // transaction, briefly selecting the error slave before resolving to the real
+  // target. system_bus.sv never sees those because it samples at the clock edge;
+  // without the delay every transaction would be reported as a fault. A genuine
+  // request stays asserted until granted.
+  always @(posedge oob_req) begin : report_out_of_bound
+    #1ns;
+    if (!oob_req || !sys_rst_n) disable report_out_of_bound;
+    $display("--------------------------------------------------------------");
+    $display("[%t] OUT-OF-BOUND ACCESS", $time);
+    $display("  addr    = 0x%08x  %0s  be=0x%1x  wdata=0x%08x",
+             oob_addr, oob_we ? "WRITE" : "READ", oob_be, oob_wdata);
+    $display("  pc_id   = 0x%08x", oob_pc);
+    $display("  core data  req addr = 0x%08x (req=%b)", oob_daddr, oob_dreq);
+    $display("  core instr req addr = 0x%08x", oob_iaddr);
+    $display("  -> matching core data addr means a CPU load/store;");
+    $display("     otherwise the DMA or the coprocessor issued it.");
+    $display("  -> riscv32-corev-elf-addr2line -f -e main.elf 0x%08x", oob_pc);
+    $display("--------------------------------------------------------------");
+  end
+`endif
+
 endmodule

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 //
@@ -175,6 +175,7 @@ int main(void) {
     if (vcd_init() != 0)
     return 1;
 
+    vcd_enable();
     for (int i = 0; i < NTESTS; i++) {
         cbd_eta3(d_inputs[i], out_sw, i);
     }
@@ -189,7 +190,7 @@ int main(void) {
     if (vcd_init() != 0)
     return 1;
 
-
+    vcd_enable();
     for (int i = 0; i < NTESTS; i++) {
         asm volatile (
             ".insn r 0x3b, 0x7, 0x2, %[dst0], %[src], %[x0]\n\t"

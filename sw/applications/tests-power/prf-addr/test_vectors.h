@@ -1,3 +1,15 @@
+/////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
+// Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+// SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+//               Valeria Piscopo    - valeria.piscopo@polito.it
+// Description:  Test vectors for the prf-addr power-characterization test.
+//
+/////////////////////////////////////////////////////////////////////////////////
+
 #ifndef TEST_VECTORS_H
 #define TEST_VECTORS_H
 

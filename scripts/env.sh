@@ -1,6 +1,6 @@
 ##########################################################################################
 #
-# Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+# Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
 # Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 # SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 #
@@ -83,5 +83,34 @@ source /eda/scripts/init_calibre
 # Initialize conda environment
 echo
 
+# The /eda/scripts/init_* scripts above replace the `conda` shell function and
+# prepend their own python3 to PATH. Without the two guards below, `conda
+# activate` fails and python3 resolves to an interpreter with no `hjson`
+# module, so `make mcu-gen` dies with "ModuleNotFoundError: No module named
+# 'hjson'".
+CONDA_ENV_DIR="$HOME/miniconda3/envs/core-v-mini-mcu"
+
+if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
+    source "$HOME/miniconda3/etc/profile.d/conda.sh"
+fi
+
 echo "Activating 'core-v-mini-mcu' conda environment..."
-conda activate core-v-mini-mcu
+conda activate core-v-mini-mcu 2>/dev/null
+
+# Guard 1: force the conda interpreter onto PATH if activation did not take.
+if ! python3 -c "import hjson" >/dev/null 2>&1; then
+    if [ -x "$CONDA_ENV_DIR/bin/python3" ]; then
+        export PATH="$CONDA_ENV_DIR/bin:$PATH"
+        export CONDA_PREFIX="$CONDA_ENV_DIR"
+        # the makefile branches on CONDA_DEFAULT_ENV to locate fusesoc
+        export CONDA_DEFAULT_ENV=core-v-mini-mcu
+    fi
+fi
+
+# Guard 2: fail loudly rather than let a later build pick the wrong interpreter.
+if ! python3 -c "import hjson" >/dev/null 2>&1; then
+    echo "WARNING: active python3 ($(command -v python3)) has no 'hjson' module;" >&2
+    echo "         'make mcu-gen' will fail. Expected $CONDA_ENV_DIR/bin/python3." >&2
+else
+    echo " - python3: $(command -v python3)"
+fi

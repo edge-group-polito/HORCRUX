@@ -1,5 +1,5 @@
 //////////////////////////////////////////////////////////////////////////////////////////
-// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab                                        //
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino                         //
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.                 //
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1                                     //
 //                                                                                      //
@@ -14,34 +14,76 @@
 //               schemes) and carry-free GF(2) accumulation (HQC) via carryless_mode_i. //
 //////////////////////////////////////////////////////////////////////////////////////////
 
+
+// Both products are exposed separately instead of being muxed internally: the
+// caller already selects between them, and an internal mux would add a false
+// path for static timing analysis.
 module unified_mul_32x32 (
     input  logic [31:0] a_i,
     input  logic [31:0] b_i,
-    input  logic        carryless_mode_i, 
-    output logic [63:0] prod_o
+    output logic [63:0] regular_prod_o,
+    output logic [63:0] clmul_prod_o
 );
-    logic [63:0] accumulator;
-    logic [63:0] partial_products [31:0];
+
+    // --------------------------------------------------------
+    // Signal Declarations
+    // --------------------------------------------------------
+    logic [63:0] regular_prod;
+    logic [63:0] clmul_prod;
+
+    logic [15:0] a_h;
+    logic [15:0] a_l;
+    logic [15:0] b_h;
+    logic [15:0] b_l;
+    logic [15:0] a_xor;
+    logic [15:0] b_xor;
+
+    logic [31:0] m0_clmul; 
+    logic [31:0] m1_clmul; 
+    logic [31:0] m2_clmul; 
+
+    // --------------------------------------------------------
+    // Regular signed 32x32 multiply 
+    // (Vivado automatically decomposes this into DSPs)
+    // --------------------------------------------------------
+    assign regular_prod = $signed({{32{a_i[31]}}, a_i}) *
+                          $signed({{32{b_i[31]}}, b_i});
+
+    // --------------------------------------------------------
+    // Carryless 32x32 multiply via Karatsuba (Pure Combinational)
+    // --------------------------------------------------------
+    assign a_h = a_i[31:16];
+    assign a_l = a_i[15:0];
+    assign b_h = b_i[31:16];
+    assign b_l = b_i[15:0];
+
+    assign a_xor = a_h ^ a_l;
+    assign b_xor = b_h ^ b_l;
 
     always_comb begin
-        accumulator = '0;
-        for (int i = 0; i < 32; i++) begin
-            if (a_i[i]) begin
-                if (carryless_mode_i)
-                    partial_products[i] = {32'b0, b_i} << i;
-                else
-                    partial_products[i] = 64'(signed'(b_i)) << i;
-            end else begin
-                partial_products[i] = '0;
-            end
+        m0_clmul = '0;
+        m1_clmul = '0;
+        m2_clmul = '0;
 
-            if (carryless_mode_i)
-                accumulator ^= partial_products[i];
-            else begin
-                if (i < 31) accumulator += partial_products[i];
-                else        accumulator -= partial_products[i]; // Signed MSB
-            end
+        // Three 16x16 Carryless Multipliers
+        // Logic depth is reduced compared to a monolithic 32x32 block
+        for (int i = 0; i < 16; i++) begin
+            if (a_l[i])   m0_clmul ^= ({16'b0, b_l} << i);
+            if (a_h[i])   m1_clmul ^= ({16'b0, b_h} << i);
+            if (a_xor[i]) m2_clmul ^= ({16'b0, b_xor} << i);
         end
-        prod_o = accumulator;
     end
+
+    // Karatsuba Reconstruction: 
+    // Result = (M1 << 32) ^ ((M0 ^ M1 ^ M2) << 16) ^ M0
+    assign clmul_prod = {m1_clmul, 32'b0} ^
+                        ({32'b0, (m0_clmul ^ m1_clmul ^ m2_clmul)} << 16) ^
+                        {32'b0, m0_clmul};
+
+    // --------------------------------------------------------
+    // Outputs (no mux: see module header comment)
+    // --------------------------------------------------------
+    assign regular_prod_o = regular_prod;
+    assign clmul_prod_o   = clmul_prod;
+
 endmodule

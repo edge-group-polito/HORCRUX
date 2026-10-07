@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 //
@@ -40,6 +40,10 @@
 /* Test result tracking */
 static int total_tests = 0;
 static int passed_tests = 0;
+
+/* SW-vs-HW comparison outcome (0 = match, 1 = mismatch). volatile so the
+ * store survives optimization and can be read from a waveform or debugger. */
+volatile uint32_t prf_mismatch = 0;
 
 /* Performance tracking */
 static uint32_t sw_total_cycles = 0;
@@ -88,13 +92,15 @@ static void test_prf_basic(void) {
     vcd_disable();
 
     total_tests++;
+
+    /* No printf: a UART write here stalls the post-synthesis gate-level
+     * simulation long past the measured region, so the testbench never reaches
+     * exit_valid. Functional checking belongs in sw/applications/tests/prf-addr. */
 #if SW_TEST_ENABLED
-    if (compare_arrays(out_sw, out_hw, SPX_N) != 0) {
-        printf("  Result: FAIL (mismatch)\n");
-    }
+    prf_mismatch = (compare_arrays(out_sw, out_hw, SPX_N) != 0) ? 1u : 0u;
+    if (prf_mismatch == 0u) passed_tests++;
 #else
     passed_tests++;
-    printf("  Result: PASS (HW only)\n");
 #endif
 }
 

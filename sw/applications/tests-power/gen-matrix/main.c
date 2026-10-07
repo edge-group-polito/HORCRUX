@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2025 PoliTO - EDGE Group, @VLSI Lab
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
 //
@@ -132,11 +132,20 @@ int main(void)
 {
 
 #if SW_TEST_ENABLED
-    test_gen_a_sw();
+    if (vcd_init() != 0)
+        return 1;
 
+    vcd_enable();
+    test_gen_a_sw();
+    vcd_disable();
 #endif
 
+    if (vcd_init() != 0)
+        return 1;
+
+    vcd_enable();
     test_gen_a_hw();
+    vcd_disable();
 
 
     return 0;

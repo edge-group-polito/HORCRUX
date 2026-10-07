@@ -1,8 +1,12 @@
 ///////////////////////////////////////////////////////////////////////////////////
 //
-// Copyright 2025 PoliTO - @VLSI Lab
+// Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
 // Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
 // SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+//
+// Auth: Alessandra Dolmeta, Valeria Piscopo
+// Email: alessandra.dolmeta@polito.it, valeria.piscopo@polito.it
+// Affiliation: EDGE Group, @VLSI Lab - Politecnico di Torino
 //
 // Generic Montgomery reduction tests for ML-DSA (Dilithium) and ML-KEM (Kyber)
 //
@@ -29,9 +33,9 @@
 #define MONTG_FALCON(dest, a) \
     asm volatile ( \
         "addi t0, %[r1], 0\n" \
-        ".insn r 0x3b, 0x7, 0x2, %[rd], t0, x0 \n" \
+        ".insn r 0x3b, 0x7, 0x10, %[rd], t0, %[q] \n" \
         : [rd] "=&r" (dest) \
-        : [r1] "r" (a) \
+        : [r1] "r" (a), [q] "r" (1) \
     );
 
 static inline int16_t montgomery_reduce_falcon(int32_t a) {

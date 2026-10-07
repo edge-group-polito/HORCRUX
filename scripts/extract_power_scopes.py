@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+##########################################################################################
+#
+# Copyright 2025 EDGE Group, @VLSI Lab - Politecnico di Torino
+# Solderpad Hardware License, Version 2.1, see LICENSE.md for details.
+# SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+#
+# Authors:      Alessandra Dolmeta - alessandra.dolmeta@polito.it
+#               Valeria Piscopo    - valeria.piscopo@polito.it
+# Design Name:  Power Scope Extractor
+# Language:     Python 3 script
+# Date:         April 2026
+#
+# Description:  Extracts the power contribution of selected hierarchical scopes from a
+#               post-synthesis hierarchy power report (Synopsys PrimePower).
+#
+##########################################################################################
 """
 Extract power contributions for selected hierarchical scopes from a
 -hierarchy power report (e.g. Synopsys Power Compiler).
